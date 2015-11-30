@@ -50,6 +50,8 @@ class Entity(object):
     denemy = False
     powerup = False
     pushable = False
+    dx = 0
+    dy = 0
 
     def __init__(self, x, y):
         self.x = x
@@ -136,8 +138,8 @@ class Entity(object):
                 self.dy = dy
                 return True
             elif self is world.p:
-                pent=world.get_ent(tx,ty)
-                if pent and pent.pushable and pent.move(dx,dy,s,world):
+                pent = world.get_ent(tx, ty)
+                if pent and pent.pushable and pent.move(dx, dy, s, world):
                     self.x = tx
                     self.y = ty
                     self.moving = True
@@ -154,12 +156,13 @@ class Entity(object):
 
 
 class Player(Entity):
-    img = img2("Man2")
     orect = pygame.Rect(10, 2, 12, 28)
     kconv = {pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1), pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0)}
     enemy = False
     bombs = 1
     rng = 2
+    dy = 1
+    iconv = {(0, -1): img2("Man2u"), (0, 1): img2("Man2"), (1, 0): img2("Man2r"), (-1, 0): img2("Man2l")}
 
     def update(self, world, events):
         keys = pygame.key.get_pressed()
@@ -175,6 +178,8 @@ class Player(Entity):
         if not self.moving:
             if world.t[self.x][self.y] == 2:
                 world.done = True
+    def get_img(self):
+        return self.iconv[(self.dx,self.dy)]
 
 
 class Ghost(Entity):
@@ -300,8 +305,9 @@ class SokoBlock(Entity):
     enemy = False
     img = img2("SokoBlok")
     pushable = True
+
     def update(self, world, events):
         if not self.moving:
-            if world.get_t(self.x,self.y)==4:
-                world.t[self.x][self.y]=5
+            if world.get_t(self.x, self.y) == 4:
+                world.t[self.x][self.y] = 5
                 world.e.remove(self)

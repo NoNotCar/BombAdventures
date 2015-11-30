@@ -63,7 +63,7 @@ class World(object):
                 if t:
                     s.blit(Tiles.tiles[t - 1].img, (x * 32, y * 32))
         for e in self.e:
-            s.blit(e.img, (e.x * 32 + e.xoff, e.y * 32 + e.yoff))
+            s.blit(e.get_img(), (e.x * 32 + e.xoff, e.y * 32 + e.yoff))
         if self.edit:
             for x, r in enumerate(self.o):
                 for y, o in enumerate(r):

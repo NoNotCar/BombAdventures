@@ -45,7 +45,7 @@ while True:
     Object.Block.img=world.textures[1]
     Object.Indest.img=world.textures[2]
     back=world.back
-    pygame.event.pump()
+    pygame.event.get()
     while not (w.playerdead or w.done):
         events = pygame.event.get()
         for event in events:
