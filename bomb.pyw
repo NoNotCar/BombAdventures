@@ -12,7 +12,7 @@ sfont=pygame.font.Font(pdf,20)
 screen = pygame.display.set_mode((640, 640))
 clock = pygame.time.Clock()
 breaking = False
-level=[2,3]
+level=[1,1]
 success=Img.sndget("Level")
 while not breaking:
     for event in pygame.event.get():

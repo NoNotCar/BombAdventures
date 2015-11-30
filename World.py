@@ -52,6 +52,10 @@ class World(object):
                 self.e.remove(e)
         if self.p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
             self.playerdead=True
+        for row in self.o:
+            for o in row:
+                if o:
+                    o.update(self)
 
     def render(self, s):
         for x, r in enumerate(self.t):
@@ -98,6 +102,8 @@ class World(object):
         return self.inworld(x, y) and self.t[x][y]
     def get_tile(self,x,y):
         return Tiles.tiles[self.t[x][y]-1]
+    def get_t(self,x,y):
+        return self.t[x][y]
     def get_ent(self,x,y):
         for e in self.e:
             if (e.x,e.y)==(x,y):
@@ -111,6 +117,8 @@ class World(object):
             return None,"spawn"
         elif eo==6:
             return Object.Indest, "obj"
+        elif eo==9:
+            return Object.SokoLock, "obj"
 
     def create_exp(self, fx, fy, r):
         self.explode(fx, fy)
