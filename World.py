@@ -1,12 +1,16 @@
 __author__ = 'NoNotCar'
-import pygame, Img, Entities, Tiles, Object, sys
+import Img, Entities, Tiles, Object, FX
+from random import randint
 
-powerup=Img.sndget("powerup")
+powerup = Img.sndget("powerup")
+
+
 class World(object):
-    def __init__(self, edit,level=None):
+    def __init__(self, edit, level=None):
         self.edit = edit
-        self.playerdead=False
-        self.done=False
+        self.playerdead = False
+        self.done = False
+        self.level = level
         if edit:
             self.t = []
             self.o = []
@@ -17,11 +21,12 @@ class World(object):
         else:
             self.p = Entities.Player(0, 0)
             self.e = [self.p]
-            savfile = open(Img.np("lvls//%s-%s.sav"%tuple(level)), "r")
+            savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
             self.t = []
             self.o = []
+            self.fx = []
             savr = savfile.readlines()
-            self.fltext=savr[0][:-1]
+            self.fltext = savr[0][:-1]
             del savr[0]
             for row in savr[:20]:
                 self.t.append([int(s) for s in row.split()])
@@ -33,13 +38,15 @@ class World(object):
                         eo = self.eoconvert(n)
                         if eo[1] == "obj":
                             self.o[x][y] = eo[0]()
-                        elif eo[1]=="ent":
-                            self.e.append(eo[0](x,y))
+                        elif eo[1] == "ent":
+                            self.e.append(eo[0](x, y))
                         elif eo[1] == "spawn":
-                            self.p.place(x,y)
+                            self.p.place(x, y)
             savfile.close()
 
     def update(self, ev):
+        if self.level[0] == 2 and not randint(0, 3):
+            self.fx.append(FX.Snow(randint(0, 628), -12))
         for e in self.e[:]:
             if e.moving:
                 e.mupdate(self)
@@ -51,11 +58,15 @@ class World(object):
             if e.rect.collidelist(dangers) != -1:
                 self.e.remove(e)
         if self.p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
-            self.playerdead=True
+            self.playerdead = True
         for row in self.o:
             for o in row:
                 if o:
                     o.update(self)
+        for fx in self.fx[:]:
+            fx.update()
+            if fx.dead:
+                self.fx.remove(fx)
 
     def render(self, s):
         for x, r in enumerate(self.t):
@@ -74,6 +85,8 @@ class World(object):
                 for y, o in enumerate(r):
                     if o:
                         s.blit(o.get_img(), (x * 32, y * 32 - 8 * o.is3d))
+        for fx in self.fx:
+            s.blit(fx.img, (fx.x, fx.y))
 
     def save(self):
         savfile = open("lvls//save.sav", "w")
@@ -100,24 +113,28 @@ class World(object):
         if self.o[x][y]:
             return False
         return self.inworld(x, y) and self.t[x][y]
-    def get_tile(self,x,y):
-        return Tiles.tiles[self.t[x][y]-1]
-    def get_t(self,x,y):
+
+    def get_tile(self, x, y):
+        return Tiles.tiles[self.t[x][y] - 1]
+
+    def get_t(self, x, y):
         return self.t[x][y]
-    def get_ent(self,x,y):
+
+    def get_ent(self, x, y):
         for e in self.e:
-            if (e.x,e.y)==(x,y):
+            if (e.x, e.y) == (x, y):
                 return e
+
     def eoconvert(self, eo):
         if eo == 1:
             return Object.Block, "obj"
         elif eo in Tiles.eents.keys():
-            return Tiles.eents[eo],"ent"
-        elif eo==3:
-            return None,"spawn"
-        elif eo==6:
+            return Tiles.eents[eo], "ent"
+        elif eo == 3:
+            return None, "spawn"
+        elif eo == 6:
             return Object.Indest, "obj"
-        elif eo==9:
+        elif eo == 9:
             return Object.SokoLock, "obj"
 
     def create_exp(self, fx, fy, r):
