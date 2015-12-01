@@ -103,7 +103,7 @@ class World(object):
     def is_clear(self, x, y, ent=None):
         for e in self.e:
             if e.x == x and e.y == y:
-                if ent and (ent is self.p and (e.enemy or e.powerup)) or (ent.enemy and e is self.p):
+                if ent and ((ent is self.p and (e.enemy or e.powerup)) or (ent.enemy and e is self.p)):
                     if e.powerup:
                         self.e.remove(e)
                         e.collect(ent)
@@ -139,6 +139,8 @@ class World(object):
             return Object.SokoLock, "obj"
         elif eo == 10:
             return Object.ExplosiveBlock, "obj"
+        elif eo == 13:
+            return Object.GhostSpawner,"obj"
 
     def create_exp(self, fx, fy, r, p=False):
         exp.play()

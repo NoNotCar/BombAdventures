@@ -1,4 +1,6 @@
 import Img
+from random import randint, shuffle
+import Entities
 class Object(object):
     is3d=True
     img=None
@@ -59,3 +61,17 @@ class ExplosiveBlock(Object):
         if self.timer is None:
             return self.img
         return self.eimgs[self.timer//3%2]
+class GhostSpawner(Object):
+    img=Img.imgsz("GhostSpawn",(32,40))
+    time=60
+    def update(self,world):
+        if not self.time:
+            dirs=[[1,0],[0,1],[-1,0],[0,-1]]
+            shuffle(dirs)
+            for dx,dy in dirs:
+                if world.is_clear(self.x+dx,self.y+dy):
+                    world.e.append(Entities.Ghost(self.x+dx,self.y+dy))
+                    break
+            self.time=randint(120,360)
+        else:
+            self.time-=1
