@@ -34,7 +34,7 @@ while True:
         pygame.time.wait(2000)
         break
     world=worlds[level[0]-1] if level[1]!=8 else castle
-    Img.musplay(world.music+".mp3")
+    Img.musplay(world.music+".ogg")
     screen.fill(world.loadcolour)
     Img.bcentre(tfont,"WORLD %s-%s"%tuple(level),screen)
     Img.bcentre(sfont,w.fltext,screen,50)
