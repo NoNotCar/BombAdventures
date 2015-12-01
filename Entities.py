@@ -3,8 +3,6 @@ from Img import img2, img32, imgstrip, imgstrip2, loc, np
 from random import choice, randint
 import pygame
 
-exp = pygame.mixer.Sound(np(loc + "explode.wav"))
-
 
 def iround(fl):
     return int(round(fl))
@@ -284,7 +282,6 @@ class Bomb(Entity):
         if self.timer == 0:
             world.create_exp(self.x, self.y, self.r)
             world.e.remove(self)
-            exp.play()
             if self.p:
                 self.p.bombs += 1
         elif self.timer <= 30:

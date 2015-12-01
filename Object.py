@@ -3,9 +3,14 @@ class Object(object):
     is3d=True
     img=None
     destructible=True
+    def __init__(self,x,y):
+        self.x=x
+        self.y=y
     def get_img(self):
         return self.img
     def update(self,world):
+        pass
+    def explode(self,world):
         pass
 class Block(Object):
     img=Img.img2("Block")
@@ -37,3 +42,20 @@ class SokoLock(Object):
                 else:
                     self.lockopen=True
                     self.destructible=True
+class ExplosiveBlock(Object):
+    img=Img.img2("ExpBlock")
+    destructible = False
+    timer=None
+    eimgs=[Img.img2("ExpBlockAct"+str(n+1)) for n in range(2)]
+    def update(self,world):
+        if self.timer is not None:
+            self.timer-=1
+            if self.timer==0:
+                world.o[self.x][self.y]=None
+                world.create_exp(self.x,self.y,2)
+    def explode(self,world):
+        self.timer=30
+    def get_img(self):
+        if self.timer is None:
+            return self.img
+        return self.eimgs[self.timer//3%2]
