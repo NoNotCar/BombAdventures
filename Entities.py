@@ -159,6 +159,7 @@ class Player(Entity):
     enemy = False
     bombs = 1
     rng = 2
+    pen = False
     dy = 1
     iconv = {(0, -1): img2("Man2u"), (0, 1): img2("Man2"), (1, 0): img2("Man2r"), (-1, 0): img2("Man2l")}
 
@@ -176,8 +177,9 @@ class Player(Entity):
         if not self.moving:
             if world.t[self.x][self.y] == 2:
                 world.done = True
+
     def get_img(self):
-        return self.iconv[(self.dx,self.dy)]
+        return self.iconv[(self.dx, self.dy)]
 
 
 class Ghost(Entity):
@@ -254,16 +256,22 @@ class Thud(Entity):
 
 class Explosion(Entity):
     img = img2("Exp")
+    pimg=img2("ExpPen")
     orect = pygame.Rect(6, 6, 20, 20)
     life = 20
     denemy = True
 
+    def __init__(self,x,y,pen):
+        self.place(x,y)
+        self.pen=pen
     def update(self, world, events):
         self.xoff = randint(-1, 1)
         self.yoff = randint(-1, 1)
         self.life -= 1
         if self.life == 0:
             world.e.remove(self)
+    def get_img(self):
+        return self.pimg if self.pen else self.img
 
 
 class Bomb(Entity):
@@ -276,11 +284,12 @@ class Bomb(Entity):
         self.y = y
         self.p = p
         self.r = r
+        self.pen=p and p.pen
 
     def update(self, world, events):
         self.timer -= 1
         if self.timer == 0:
-            world.create_exp(self.x, self.y, self.r)
+            world.create_exp(self.x, self.y, self.r, self.pen)
             world.e.remove(self)
             if self.p:
                 self.p.bombs += 1
@@ -296,6 +305,23 @@ class RangeUp(Entity):
 
     def collect(self, p):
         p.rng += 1
+
+
+class Penetrating(Entity):
+    enemy = False
+    img = img2("Pen")
+    powerup = True
+
+    def collect(self, p):
+        p.pen = True
+
+class BombPlus(Entity):
+    enemy = False
+    img = img2("ExBomb")
+    powerup = True
+
+    def collect(self, p):
+        p.bombs+=1
 
 
 class SokoBlock(Entity):

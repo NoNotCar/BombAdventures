@@ -5,6 +5,7 @@ from random import randint
 powerup = Img.sndget("powerup")
 exp = Img.sndget("explode")
 
+
 class World(object):
     def __init__(self, edit, level=None):
         self.edit = edit
@@ -37,7 +38,7 @@ class World(object):
                     if n:
                         eo = self.eoconvert(n)
                         if eo[1] == "obj":
-                            self.o[x][y] = eo[0](x,y)
+                            self.o[x][y] = eo[0](x, y)
                         elif eo[1] == "ent":
                             self.e.append(eo[0](x, y))
                         elif eo[1] == "spawn":
@@ -139,27 +140,29 @@ class World(object):
         elif eo == 10:
             return Object.ExplosiveBlock, "obj"
 
-    def create_exp(self, fx, fy, r):
+    def create_exp(self, fx, fy, r, p=False):
         exp.play()
-        self.explode(fx, fy)
+        self.explode(fx, fy,p)
         for dx, dy in [[0, 1], [1, 0], [0, -1], [-1, 0]]:
             x, y = fx + dx, fy + dy
             for n in range(r):
-                if self.explode(x, y):
+                if self.explode(x, y, p):
                     break
                 x += dx
                 y += dy
 
-    def explode(self, x, y):
+    def explode(self, x, y, p):
         if self.inworld(x, y):
             if self.o[x][y]:
                 if self.o[x][y].destructible:
                     self.o[x][y] = None
-                    self.e.append(Entities.Explosion(x, y))
+                    self.e.append(Entities.Explosion(x, y, p))
                 else:
                     self.o[x][y].explode(self)
-                return True
+                    return True
+                if not p:
+                    return True
             else:
-                self.e.append(Entities.Explosion(x, y))
+                self.e.append(Entities.Explosion(x, y, p))
         else:
             return True
