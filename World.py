@@ -26,6 +26,10 @@ class World(object):
             self.t = []
             self.o = []
             self.fx = []
+            self.bfx = []
+            if level[0]==3 and level[1]!=8:
+                for _ in range(randint(50,60)):
+                    self.bfx.append(FX.Star(randint(0,638),randint(0,638)))
             savr = savfile.readlines()
             self.fltext = savr[0][:-1]
             del savr[0]
@@ -68,8 +72,15 @@ class World(object):
             fx.update()
             if fx.dead:
                 self.fx.remove(fx)
+        for fx in self.bfx[:]:
+            fx.update()
+            if fx.dead:
+                self.bfx.remove(fx)
 
     def render(self, s):
+        if not self.edit:
+            for fx in self.bfx:
+                s.blit(fx.img, (fx.x, fx.y))
         for x, r in enumerate(self.t):
             for y, t in enumerate(r):
                 if t:
