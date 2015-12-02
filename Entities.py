@@ -1,6 +1,6 @@
 __author__ = 'NoNotCar'
 from Img import img2, img32, imgstrip, imgstrip2, loc, np
-from random import choice, randint
+from random import choice, randint, shuffle
 import pygame
 
 
@@ -334,3 +334,28 @@ class SokoBlock(Entity):
             if world.get_t(self.x, self.y) == 4:
                 world.t[self.x][self.y] = 5
                 world.e.remove(self)
+
+class Slime(Entity):
+    anitick=0
+    imgs=imgstrip2("Slime")
+    orect = pygame.Rect(6,10,20,14)
+    def update(self, world, events):
+        if self.anitick<31:
+            self.anitick+=1
+        else:
+            self.anitick=0
+        if not self.moving:
+            if self.x==world.p.x:
+                self.move(0,1 if self.y<world.p.y else -1, 2,world)
+            elif self.y==world.p.y:
+                self.move(1 if self.x<world.p.x else -1,0, 2,world)
+        if not self.moving:
+            dirs=[[1,0],[0,1],[-1,0],[0,-1]]
+            shuffle(dirs)
+            for dx,dy in dirs:
+                if self.move(dx,dy,0.5,world):
+                    break
+
+    def get_img(self):
+        return self.imgs[self.anitick//8 if self.speed==0.5 else self.anitick//4%4]
+
