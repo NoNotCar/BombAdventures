@@ -50,6 +50,7 @@ class Entity(object):
     pushable = False
     dx = 0
     dy = 0
+    ignore=False
 
     def __init__(self, x, y):
         self.x = x
@@ -74,7 +75,7 @@ class Entity(object):
             self.xoff = 0
             self.yoff = 0
             self.moving = False
-            if world.get_tile(self.x, self.y).slippery:
+            if not self.ignore and world.get_tile(self.x, self.y).slippery:
                 self.move(self.dx, self.dy, self.speed, world)
                 self.pathfollowing = False
             if self.pathfollowing:
@@ -122,10 +123,11 @@ class Entity(object):
             self.move(dx, dy, self.speed, world, True, False)
 
     def move(self, dx, dy, s, world, ignoreobs=False):
+        self.ignore=ignoreobs
         if not self.moving:
             tx = self.x + dx
             ty = self.y + dy
-            if world.is_clear(tx, ty, self):
+            if ignoreobs or world.is_clear(tx, ty, self):
                 self.x = tx
                 self.y = ty
                 self.moving = True
@@ -358,4 +360,17 @@ class Slime(Entity):
 
     def get_img(self):
         return self.imgs[self.anitick//8 if self.speed==0.5 else self.anitick//4%4]
+
+class CannonBall(Entity):
+    img=img2("CannonBall")
+    orect = pygame.Rect(10,10,12,12)
+    def __init__(self,x,y,dx):
+        self.dx=dx
+        self.place(x,y)
+    def update(self, world, events):
+        if not self.moving:
+            if world.inworld(self.x,self.y):
+                self.move(self.dx,0,4,world,True)
+            else:
+                world.e.remove(self)
 

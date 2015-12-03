@@ -75,3 +75,17 @@ class GhostSpawner(Object):
             self.time=randint(120,360)
         else:
             self.time-=1
+
+class CannonBlock(Object):
+    destructible = False
+    time=randint(60,120)
+    img=Img.img2("CannonBlock")
+    def update(self,world):
+        if not self.time:
+            if world.p.x<self.x:
+                world.e.append(Entities.CannonBall(self.x,self.y,-1))
+            elif world.p.x>self.x:
+                world.e.append(Entities.CannonBall(self.x,self.y,1))
+            self.time=randint(120,360)
+        else:
+            self.time-=1

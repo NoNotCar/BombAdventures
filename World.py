@@ -112,6 +112,8 @@ class World(object):
         return 0 <= x < 20 and 0 <= y < 20
 
     def is_clear(self, x, y, ent=None):
+        if not self.inworld(x,y):
+            return False
         for e in self.e:
             if e.x == x and e.y == y:
                 if ent and ((ent is self.p and (e.enemy or e.powerup)) or (ent.enemy and e is self.p)):
@@ -124,7 +126,7 @@ class World(object):
                     return False
         if self.o[x][y]:
             return False
-        return self.inworld(x, y) and self.t[x][y]
+        return self.t[x][y]
 
     def get_tile(self, x, y):
         return Tiles.tiles[self.t[x][y] - 1]
@@ -152,6 +154,8 @@ class World(object):
             return Object.ExplosiveBlock, "obj"
         elif eo == 13:
             return Object.GhostSpawner,"obj"
+        elif eo == 15:
+            return Object.CannonBlock,"obj"
 
     def create_exp(self, fx, fy, r, p=False):
         exp.play()
