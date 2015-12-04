@@ -6,6 +6,8 @@ class Tile(object):
     img = None
     solid = True
     slippery = False
+    def update(self,world,x,y):
+        pass
 
 
 class Grass(Tile):
@@ -28,8 +30,23 @@ class SokoHole(Tile):
 class SokoHoleFilled(Tile):
     img = Img.img2("SokoHolFilled")
 
+class SokoPlate(Tile):
+    img = Img.img2("SokoPlate")
+    def update(self,world,x,y):
+        gent=world.get_ent(x,y)
+        if gent and gent.name=="Sokoblock":
+            world.t[x][y]=7
 
-tiles = (Grass(), Goal(), Ice(), SokoHole(), SokoHoleFilled())
+class SokoPlateAct(Tile):
+    img = Img.img2("SokoPlateAct")
+    def update(self,world,x,y):
+        gent=world.get_ent(x,y)
+        if not gent or gent.name!="Sokoblock":
+            world.t[x][y]=6
+
+
+
+tiles = (Grass(), Goal(), Ice(), SokoHole(), SokoHoleFilled(),SokoPlate(),SokoPlateAct())
 eobjs = ((Img.img2("Block"), 1), (Img.imgstrip("Ghost")[0], 0), (Img.img2("Man2"), 0), (Img.imgstrip2("Thud")[0], 0),
          (Img.img32("RangeUp"), 0), (Img.img2("Grass2"), 1), (Img.imgstrip("FGhost")[0], 0), (Img.img2("SokoBlok"), 0),
          (Img.img2("SokoLok"), 1), (Img.img2("ExpBlock"), 1), (Img.img2("Pen"), 0), (Img.img2("ExBomb"), 0),

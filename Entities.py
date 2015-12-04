@@ -330,7 +330,7 @@ class SokoBlock(Entity):
     enemy = False
     img = img2("SokoBlok")
     pushable = True
-
+    name = "Sokoblock"
     def update(self, world, events):
         if not self.moving:
             if world.get_t(self.x, self.y) == 4:

@@ -69,14 +69,17 @@ class World(object):
                 if o:
                     o.update(self)
         for fx in self.fx[:]:
-            fx.update()
+            fx.update(self)
             if fx.dead:
                 self.fx.remove(fx)
         for fx in self.bfx[:]:
-            fx.update()
+            fx.update(self)
             if fx.dead:
                 self.bfx.remove(fx)
-
+        for x, r in enumerate(self.t):
+            for y, t in enumerate(r):
+                if t:
+                    Tiles.tiles[t-1].update(self,x,y)
     def render(self, s):
         if not self.edit:
             for fx in self.bfx:
