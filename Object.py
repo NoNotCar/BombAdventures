@@ -78,8 +78,11 @@ class GhostSpawner(Object):
 
 class CannonBlock(Object):
     destructible = False
-    time=randint(60,120)
     img=Img.img2("CannonBlock")
+    def __init__(self,x,y):
+        self.x=x
+        self.y=y
+        self.time=randint(60,120)
     def update(self,world):
         if not self.time:
             if world.p.x<self.x:
