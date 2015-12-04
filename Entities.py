@@ -157,7 +157,7 @@ class Entity(object):
 
 class Player(Entity):
     orect = pygame.Rect(10, 2, 12, 28)
-    kconv = {pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1), pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0)}
+    kconv = {pygame.K_w: (0, -1), pygame.K_s: (0, 1), pygame.K_a: (-1, 0), pygame.K_d: (1, 0)}
     enemy = False
     bombs = 1
     rng = 2
