@@ -12,22 +12,22 @@ seltile=0
 selobj=0
 w=World.World(True)
 while True:
+    kmods=pygame.key.get_mods()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-        elif event.type==pygame.KEYDOWN and event.key==pygame.K_s:
+        elif event.type==pygame.KEYDOWN and event.key==pygame.K_s and kmods&pygame.KMOD_LCTRL:
             w.save()
             print "SAVED"
         elif event.type==pygame.KEYDOWN:
-            if event.key==pygame.K_UP:
+            if event.key==pygame.K_w:
                 seltile=(seltile-1)%len(Tiles.tiles)
-            elif event.key==pygame.K_DOWN:
+            elif event.key==pygame.K_s:
                 seltile=(seltile+1)%len(Tiles.tiles)
-            elif event.key==pygame.K_LEFT:
+            elif event.key==pygame.K_a:
                 selobj=(selobj-1)%len(Tiles.eobjs)
-            elif event.key==pygame.K_RIGHT:
+            elif event.key==pygame.K_d:
                 selobj=(selobj+1)%len(Tiles.eobjs)
-    kmods=pygame.key.get_mods()
     if pygame.mouse.get_pressed()[0]:
         mpos=pygame.mouse.get_pos()
         if mpos[0]<640 and mpos[1]<640:
