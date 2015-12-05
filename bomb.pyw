@@ -44,6 +44,8 @@ while True:
     Tiles.Grass.img=world.textures[0]
     Object.Block.img=world.textures[1]
     Object.Indest.img=world.textures[2]
+    if len(world.textures)==4:
+        Tiles.Ice.img=world.textures[3]
     back=world.back
     pygame.event.get()
     while not (w.playerdead or w.done):
