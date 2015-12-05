@@ -12,6 +12,7 @@ class World(object):
         self.playerdead = False
         self.done = False
         self.level = level
+        self.exitcode="NORMAL"
         if edit:
             self.t = []
             self.o = []

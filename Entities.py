@@ -177,8 +177,13 @@ class Player(Entity):
                          self))
                 self.bombs -= 1
         if not self.moving:
-            if world.t[self.x][self.y] == 2:
+            tile=world.t[self.x][self.y]
+            if tile == 2:
                 world.done = True
+            elif tile==8:
+                world.done=True
+                world.exitcode="SECRET"
+
 
     def get_img(self):
         return self.iconv[(self.dx, self.dy)]

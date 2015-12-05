@@ -59,8 +59,10 @@ while True:
     pygame.mixer.music.stop()
     if w.done:
         success.play()
-        if level[1]==8:
+        if level[1] in [8,"A"]:
             level=[level[0]+1,1]
+        elif w.exitcode=="SECRET":
+            level=[level[0],"A"]
         else:
             level[1]+=1
     pygame.time.wait(1000)
