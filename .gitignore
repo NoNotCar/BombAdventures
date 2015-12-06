@@ -45,3 +45,6 @@ Temporary Items
 #Python
 *.pyc
 .idea
+
+#Save File
+SAVE.sav

@@ -12,16 +12,16 @@ sfont=pygame.font.Font(pdf,20)
 screen = pygame.display.set_mode((640, 640))
 clock = pygame.time.Clock()
 breaking = False
+wnum=1
+Img.musplay("OF.ogg")
 try:
     savefile=open("SAVE.sav","r")
     save=savefile.readline()
     if Save.load(save):
-        level=[Save.load(save),1]
-    else:
-        level=[1,1]
+        wnum=Save.load(save)
     savefile.close()
 except IOError:
-    level=[1,1]
+    pass
 success=Img.sndget("Level")
 while not breaking:
     for event in pygame.event.get():
@@ -31,8 +31,29 @@ while not breaking:
             breaking = True
     screen.fill((255, 0, 0))
     Img.bcentre(tfont,"BOMB ADVENTURES",screen)
+    Img.bcentre(sfont,"Click to start",screen,50)
     pygame.display.flip()
     clock.tick(60)
+breaking=False
+wselnum=0
+while not breaking:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            my=pygame.mouse.get_pos()[1]
+            sel=(my-70)//64
+            if 0<=sel<wnum:
+                wselnum=sel+1
+                breaking=True
+    screen.fill((0, 0, 0))
+    Img.bcentrex(tfont,"SELECT WORLD",screen,2,(255,255,255))
+    for n,w in enumerate(worlds[:wnum]):
+        pygame.draw.rect(screen,w.loadcolour,pygame.Rect(0,n*64+66,640,64))
+        Img.bcentrex(tfont,"WORLD %s" % str(n+1),screen,n*64+70)
+    pygame.display.flip()
+    clock.tick(60)
+level=[wselnum,1]
 while True:
     try:
         w = World.World(False,level)

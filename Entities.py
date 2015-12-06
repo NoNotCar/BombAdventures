@@ -375,7 +375,7 @@ class CannonBall(Entity):
         self.js=True
     def update(self, world, events):
         if not self.moving:
-            if not self.js and world.o[self.x][self.y]:
+            if not self.js and world.inworld(self.x,self.y) and world.o[self.x][self.y]:
                 world.e.remove(self)
             elif world.inworld(self.x,self.y):
                 self.move(self.dx,0,4,world,True)
