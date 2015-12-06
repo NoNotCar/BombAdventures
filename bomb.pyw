@@ -2,7 +2,7 @@ __author__ = 'NoNotCar'
 import pygame, sys, Img
 import World
 from Worlds import worlds, castle
-import Tiles,Object
+import Tiles,Object,Save
 
 pygame.init()
 pygame.font.init()
@@ -12,7 +12,16 @@ sfont=pygame.font.Font(pdf,20)
 screen = pygame.display.set_mode((640, 640))
 clock = pygame.time.Clock()
 breaking = False
-level=[1,1]
+try:
+    savefile=open("SAVE.sav","r")
+    save=savefile.readline()
+    if Save.load(save):
+        level=[Save.load(save),1]
+    else:
+        level=[1,1]
+    savefile.close()
+except IOError:
+    level=[1,1]
 success=Img.sndget("Level")
 while not breaking:
     for event in pygame.event.get():
@@ -63,6 +72,9 @@ while True:
         success.play()
         if level[1] in [8,"A"]:
             level=[level[0]+1,1]
+            savefile=open("SAVE.sav","w")
+            savefile.write(Save.save(level[0]))
+            savefile.close()
         elif w.exitcode=="SECRET":
             level=[level[0],"A"]
         else:
