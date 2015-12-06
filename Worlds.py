@@ -16,7 +16,7 @@ worlds = [World([Img.img2("Grass"), Img.img2("Block"), Img.img2("Grass2")], "Cum
                 (50, 50, 50)),
           World([Img.img2("Sand"), Img.img2("Block"), Img.img2("CastleInGrey"), Img.img2("Oil")], "Desert",
                 (181, 117, 0), (250, 250, 0)),
-          World([Img.imgsz("ChessBoard",(32,40)), Img.img2("CastleBlock"), Img.img2("CastleInGrey"),Img.imgsz("IceChess",(32,40))], "ChOrDs", (255, 255, 255),
+          World([Img.imgsz("ChessBoard",(32,40)), Img.img2("CastleBlock"), Img.img2("PuzzBlock"),Img.imgsz("IceChess",(32,40))], "ChOrDs", (255, 255, 255),
                 (255, 81, 226)),
           World([Img.img2("RockSnow"), Img.img2("RedBlock"), Img.img2("CastleIn"), Img.img2("RockIce")], "W5V",
                 (255, 93, 0), (200, 59, 0))]
