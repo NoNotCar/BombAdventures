@@ -183,6 +183,9 @@ class Player(Entity):
             elif tile==8:
                 world.done=True
                 world.exitcode="SECRET"
+            elif tile==9:
+                world.done=True
+                world.exitcode="WARP"
 
 
     def get_img(self):

@@ -58,6 +58,9 @@ while not breaking:
     pygame.display.flip()
     clock.tick(60)
 level=[wselnum,1]
+success.play()
+pygame.mixer.music.stop()
+pygame.time.wait(1000)
 while True:
     try:
         w = World.World(False,level)
@@ -83,16 +86,26 @@ while True:
         Tiles.Ice.img=world.textures[3]
     back=world.back
     pygame.event.get()
-    while not (w.playerdead or w.done):
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                sys.exit()
-        screen.fill(back)
-        w.update(events)
-        w.render(screen)
-        pygame.display.flip()
-        clock.tick(60)
+    warplevel=1
+    while True:
+        while not (w.playerdead or w.done):
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    sys.exit()
+            screen.fill(back)
+            w.update(events)
+            w.render(screen)
+            pygame.display.flip()
+            clock.tick(60)
+        if w.exitcode!="WARP":
+            break
+        else:
+            success.play()
+            w=World.World(False,level+[warplevel])
+            warplevel+=1
+            pygame.time.wait(1000)
+            pygame.event.get()
     pygame.mixer.music.stop()
     if w.done:
         success.play()

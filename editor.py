@@ -1,12 +1,10 @@
-import Tiles
-
 __author__ = 'NoNotCar'
 import pygame, sys
+pygame.init()
+screen = pygame.display.set_mode((640, 704))
 import World
 import Tiles
 
-pygame.init()
-screen = pygame.display.set_mode((640, 704))
 clock = pygame.time.Clock()
 seltile=0
 selobj=0

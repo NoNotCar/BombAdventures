@@ -23,7 +23,10 @@ class World(object):
         else:
             self.p = Entities.Player(0, 0)
             self.e = [self.p]
-            savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
+            if len(level)==2:
+                savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
+            else:
+                savfile = open(Img.np("lvls//%s-%s-%s.sav" % tuple(level)), "r")
             self.t = []
             self.o = []
             self.fx = []
