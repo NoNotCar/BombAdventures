@@ -51,7 +51,7 @@ class World(object):
             savfile.close()
 
     def update(self, ev):
-        if self.level[0] == 2 and not randint(0, 3):
+        if self.level[0] in [2,6] and not randint(0, 3):
             self.fx.append(FX.Snow(randint(0, 628), -12))
         for e in self.e[:]:
             if e.moving:
