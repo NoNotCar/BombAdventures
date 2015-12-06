@@ -8,22 +8,22 @@ pygame.mixer.init()
 
 
 def img2(fil):
-    return pygame.transform.scale2x(pygame.image.load(np(loc + fil + ".png")))
+    return pygame.transform.scale2x(pygame.image.load(np(loc + fil + ".png"))).convert_alpha()
 
 
 def img32(fil):
-    return pygame.transform.scale(pygame.image.load(np(loc + fil + ".png")), (32, 32))
+    return pygame.transform.scale(pygame.image.load(np(loc + fil + ".png")), (32, 32)).convert_alpha()
 
 
 def imgsz(fil, sz):
-    return pygame.transform.scale(pygame.image.load(np(loc + fil + ".png")), sz)
+    return pygame.transform.scale(pygame.image.load(np(loc + fil + ".png")), sz).convert_alpha()
 
 
 def imgstrip2(fil):
     img = pygame.image.load(np(loc + fil + ".png"))
     imgs = []
     for n in range(img.get_width() // 16):
-        imgs.append(pygame.transform.scale2x(img.subsurface(pygame.Rect(n * 16, 0, 16, 16))))
+        imgs.append(pygame.transform.scale2x(img.subsurface(pygame.Rect(n * 16, 0, 16, 16))).convert_alpha())
     return imgs
 
 
@@ -31,7 +31,7 @@ def imgstrip(fil):
     img = pygame.image.load(np(loc + fil + ".png"))
     imgs = []
     for n in range(img.get_width() // 16):
-        imgs.append(pygame.transform.scale(img.subsurface(pygame.Rect(n * 16, 0, 16, 16)), (32, 32)))
+        imgs.append(pygame.transform.scale(img.subsurface(pygame.Rect(n * 16, 0, 16, 16)), (32, 32)).convert_alpha())
     return imgs
 
 
