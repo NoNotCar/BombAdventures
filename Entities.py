@@ -164,11 +164,15 @@ class Player(Entity):
     rng = 2
     pen = False
     dy = 1
-    iconv = {(0, -1): img2("Man2u"), (0, 1): img2("Man2"), (1, 0): img2("Man2r"), (-1, 0): img2("Man2l")}
+    iconv = {(0, -1): img2("Men/Man2u"), (0, 1): img2("Men/Man2"), (1, 0): img2("Men/Man2r"), (-1, 0): img2("Men/Man2l")}
     ms = 2
     akey = pygame.K_UP
+    rd=False
+    detonate=False
 
     def update(self, world, events):
+        if self.detonate:
+            self.detonate=False
         if world.akey == self.akey:
             keys = pygame.key.get_pressed()
             for k, v in self.kconv.iteritems():
@@ -181,6 +185,8 @@ class Player(Entity):
                              self.rng,
                              self))
                     self.bombs -= 1
+                elif e.type == pygame.KEYDOWN and e.key == pygame.K_LSHIFT and self.rd:
+                    self.detonate=True
         if not self.moving:
             tile = world.t[self.x][self.y]
             if tile == 2:
@@ -200,7 +206,7 @@ class SmallPlayer(Player):
     orect = pygame.Rect(12, 4, 8, 24)
     rng = 1
     ms = 4
-    iconv = {(0, -1): img2("SManu"), (0, 1): img2("SMan"), (1, 0): img2("SManr"), (-1, 0): img2("SManl")}
+    iconv = {(0, -1): img2("Men/SManu"), (0, 1): img2("Men/SMan"), (1, 0): img2("Men/SManr"), (-1, 0): img2("Men/SManl")}
     akey = pygame.K_DOWN
 
 
@@ -212,7 +218,14 @@ class FatPlayer(Player):
     pen = True
     sticky = True
     akey = pygame.K_LEFT
-    iconv = {(0, -1): img2("FManu"), (0, 1): img2("FMan"), (1, 0): img2("FManr"), (-1, 0): img2("FManl")}
+    iconv = {(0, -1): img2("Men/FManu"), (0, 1): img2("Men/FMan"), (1, 0): img2("Men/FManr"), (-1, 0): img2("Men/FManl")}
+
+class ThinPlayer(Player):
+    orect = pygame.Rect(12, 2, 8, 28)
+    rng = 3
+    rd = True
+    akey = pygame.K_RIGHT
+    iconv = {(0, -1): img2("Men/TManu"), (0, 1): img2("Men/TMan"), (1, 0): img2("Men/TManr"), (-1, 0): img2("Men/TManl")}
 
 
 class Ghost(Entity):
@@ -323,17 +336,24 @@ class Bomb(Entity):
         self.p = p
         self.r = r
         self.pen = p and p.pen
+        self.rd = p and p.rd
 
     def update(self, world, events):
-        self.timer -= 1
-        if self.timer == 0:
-            world.create_exp(self.x, self.y, self.r, self.pen)
-            world.e.remove(self)
-            if self.p:
+        if self.rd:
+            if self.p.detonate:
+                world.create_exp(self.x, self.y, self.r, self.pen)
+                world.e.remove(self)
                 self.p.bombs += 1
-        elif self.timer <= 30:
-            self.xoff = randint(-2, 2)
-            self.yoff = randint(-2, 2)
+        else:
+            self.timer -= 1
+            if self.timer == 0:
+                world.create_exp(self.x, self.y, self.r, self.pen)
+                world.e.remove(self)
+                if self.p:
+                    self.p.bombs += 1
+            elif self.timer <= 30:
+                self.xoff = randint(-2, 2)
+                self.yoff = randint(-2, 2)
 
 
 class RangeUp(Entity):

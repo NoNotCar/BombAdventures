@@ -175,6 +175,8 @@ class World(object):
             return Entities.SmallPlayer, "spawn"
         elif eo == 17:
             return Entities.FatPlayer, "spawn"
+        elif eo == 18:
+            return Entities.ThinPlayer, "spawn"
 
     def create_exp(self, fx, fy, r, p=False):
         exp.play()
