@@ -85,9 +85,10 @@ class CannonBlock(Object):
         self.time=randint(60,120)
     def update(self,world):
         if not self.time:
-            if world.p.x<self.x:
+            p=world.get_p(self.x,self.y)
+            if p.x<self.x:
                 world.e.append(Entities.CannonBall(self.x,self.y,-1))
-            elif world.p.x>self.x:
+            elif p.x>self.x:
                 world.e.append(Entities.CannonBall(self.x,self.y,1))
             self.time=randint(120,360)
         else:
