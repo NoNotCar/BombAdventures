@@ -2,7 +2,7 @@ __author__ = 'NoNotCar'
 import pygame, sys
 pygame.init()
 pygame.font.init()
-screen = pygame.display.set_mode((640, 640))
+screen = pygame.display.set_mode((640, 672))
 import World, Img
 from Worlds import worlds, castle
 import Tiles,Object,Save
@@ -14,6 +14,9 @@ clock = pygame.time.Clock()
 breaking = False
 man=Img.img2("Man2r")
 wnum=1
+expimg=Img.img2("Exp")
+pexpimg=Img.img2("ExpPen")
+bombimg=Img.img2("Bomb")
 Img.musplay("OF.ogg")
 try:
     savefile=open("SAVE.sav","r")
@@ -53,7 +56,7 @@ while not breaking:
     for n,w in enumerate(worlds[:wnum]):
         pygame.draw.rect(screen,w.loadcolour,pygame.Rect(0,n*64+66,640,64))
         Img.bcentrex(tfont,"WORLD %s" % str(n+1),screen,n*64+70)
-    screen.blit(man,(mx-32,614))
+    screen.blit(man,(mx-32,646))
     mx=(mx+2)%672
     pygame.display.flip()
     clock.tick(60)
@@ -96,6 +99,13 @@ while True:
             screen.fill(back)
             w.update(events)
             w.render(screen)
+            pygame.draw.rect(screen,(200,200,200),pygame.Rect(0,640,640,32))
+            ap=w.get_activeplayer()
+            screen.blit(ap.iconv[(0,1)],(0,640))
+            for n in range(ap.rng):
+                screen.blit(pexpimg if ap.pen else expimg, (32+n*32,640))
+            for x in range(ap.bombs):
+                screen.blit(bombimg,(64+n*32+x*32,640))
             pygame.display.flip()
             clock.tick(60)
         if w.exitcode!="WARP":

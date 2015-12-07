@@ -1,5 +1,5 @@
 __author__ = 'NoNotCar'
-import Img, Entities, Tiles, Object, FX
+import Img, Entities, Tiles, Object, FX, pygame
 from random import randint
 
 powerup = Img.sndget("powerup")
@@ -21,8 +21,8 @@ class World(object):
                 self.o.append([0] * 20)
             self.e = []
         else:
-            self.p = Entities.Player(0, 0)
-            self.e = [self.p]
+            self.e = []
+            self.ps=[]
             if len(level)==2:
                 savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
             else:
@@ -50,10 +50,17 @@ class World(object):
                         elif eo[1] == "ent":
                             self.e.append(eo[0](x, y))
                         elif eo[1] == "spawn":
-                            self.p.place(x, y)
+                            self.ps.append(eo[0](x, y))
+                            self.e.append(self.ps[-1])
+                            self.akey=self.ps[-1].akey
             savfile.close()
 
     def update(self, ev):
+        for e in ev:
+            if e.type==pygame.KEYDOWN:
+                if e.key in [pygame.K_UP, pygame.K_DOWN,pygame.K_LEFT,pygame.K_RIGHT]:
+                    if e.key in [p.akey for p in self.ps]:
+                        self.akey=e.key
         if self.level[0] in [2,6] and not randint(0, 3):
             self.fx.append(FX.Snow(randint(0, 628), -12))
         for e in self.e[:]:
@@ -66,8 +73,9 @@ class World(object):
         for e in [e for e in self.e if not e.denemy and e.enemy]:
             if e.rect.collidelist(dangers) != -1:
                 self.e.remove(e)
-        if self.p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
-            self.playerdead = True
+        for p in self.ps:
+            if p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
+                self.playerdead = True
         for row in self.o:
             for o in row:
                 if o:
@@ -123,7 +131,7 @@ class World(object):
             return False
         for e in self.e:
             if e.x == x and e.y == y:
-                if ent and ((ent is self.p and (e.enemy or e.powerup)) or (ent.enemy and e is self.p)):
+                if ent and ((ent in self.ps and (e.enemy or e.powerup)) or (ent.enemy and e in self.ps)):
                     if e.powerup:
                         self.e.remove(e)
                         e.collect(ent)
@@ -152,7 +160,7 @@ class World(object):
         elif eo in Tiles.eents.keys():
             return Tiles.eents[eo], "ent"
         elif eo == 3:
-            return None, "spawn"
+            return Entities.Player, "spawn"
         elif eo == 6:
             return Object.Indest, "obj"
         elif eo == 9:
@@ -163,6 +171,10 @@ class World(object):
             return Object.GhostSpawner,"obj"
         elif eo == 15:
             return Object.CannonBlock,"obj"
+        elif eo == 16:
+            return Entities.SmallPlayer, "spawn"
+        elif eo == 17:
+            return Entities.FatPlayer, "spawn"
 
     def create_exp(self, fx, fy, r, p=False):
         exp.play()
@@ -190,3 +202,17 @@ class World(object):
                 self.e.append(Entities.Explosion(x, y, p))
         else:
             return True
+
+    def get_p(self,x,y):
+        if len(self.ps)==1:
+            return self.ps[0]
+        scores=[]
+        for p in self.ps:
+            scores.append((p, abs(p.x-x)+abs(p.y-y)))
+        minscore=min([x[1] for x in scores])
+        for p, s in scores:
+            if s == minscore:
+                return p
+        return self.ps[0]
+    def get_activeplayer(self):
+        return [p for p in self.ps if p.akey==self.akey][0]

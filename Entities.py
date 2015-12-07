@@ -50,7 +50,8 @@ class Entity(object):
     pushable = False
     dx = 0
     dy = 0
-    ignore=False
+    ignore = False
+    sticky = False
 
     def __init__(self, x, y):
         self.x = x
@@ -75,7 +76,7 @@ class Entity(object):
             self.xoff = 0
             self.yoff = 0
             self.moving = False
-            if not self.ignore and world.get_tile(self.x, self.y).slippery:
+            if not (self.ignore or self.sticky) and world.get_tile(self.x, self.y).slippery:
                 self.move(self.dx, self.dy, self.speed, world)
                 self.pathfollowing = False
             if self.pathfollowing:
@@ -123,7 +124,7 @@ class Entity(object):
             self.move(dx, dy, self.speed, world, True, False)
 
     def move(self, dx, dy, s, world, ignoreobs=False):
-        self.ignore=ignoreobs
+        self.ignore = ignoreobs
         if not self.moving:
             tx = self.x + dx
             ty = self.y + dy
@@ -137,7 +138,7 @@ class Entity(object):
                 self.dx = dx
                 self.dy = dy
                 return True
-            elif self is world.p:
+            elif self in world.ps:
                 pent = world.get_ent(tx, ty)
                 if pent and pent.pushable and pent.move(dx, dy, s, world):
                     self.x = tx
@@ -164,32 +165,54 @@ class Player(Entity):
     pen = False
     dy = 1
     iconv = {(0, -1): img2("Man2u"), (0, 1): img2("Man2"), (1, 0): img2("Man2r"), (-1, 0): img2("Man2l")}
+    ms = 2
+    akey = pygame.K_UP
 
     def update(self, world, events):
-        keys = pygame.key.get_pressed()
-        for k, v in self.kconv.iteritems():
-            if keys[k] and self.move(v[0], v[1], 2, world):
-                break
-        for e in events:
-            if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE and self.bombs:
-                world.e.append(
-                    Bomb(iround((self.x * 32 + self.xoff) / 32.0), iround((self.y * 32 + self.yoff) / 32.0), self.rng,
-                         self))
-                self.bombs -= 1
+        if world.akey == self.akey:
+            keys = pygame.key.get_pressed()
+            for k, v in self.kconv.iteritems():
+                if keys[k] and self.move(v[0], v[1], self.ms, world):
+                    break
+            for e in events:
+                if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE and self.bombs:
+                    world.e.append(
+                        Bomb(iround((self.x * 32 + self.xoff) / 32.0), iround((self.y * 32 + self.yoff) / 32.0),
+                             self.rng,
+                             self))
+                    self.bombs -= 1
         if not self.moving:
-            tile=world.t[self.x][self.y]
+            tile = world.t[self.x][self.y]
             if tile == 2:
                 world.done = True
-            elif tile==8:
-                world.done=True
-                world.exitcode="SECRET"
-            elif tile==9:
-                world.done=True
-                world.exitcode="WARP"
-
+            elif tile == 8:
+                world.done = True
+                world.exitcode = "SECRET"
+            elif tile == 9:
+                world.done = True
+                world.exitcode = "WARP"
 
     def get_img(self):
         return self.iconv[(self.dx, self.dy)]
+
+
+class SmallPlayer(Player):
+    orect = pygame.Rect(12, 4, 8, 24)
+    rng = 1
+    ms = 4
+    iconv = {(0, -1): img2("SManu"), (0, 1): img2("SMan"), (1, 0): img2("SManr"), (-1, 0): img2("SManl")}
+    akey = pygame.K_DOWN
+
+
+class FatPlayer(Player):
+    orect = pygame.Rect(8, 2, 16, 28)
+    rng = 2
+    bombs = 2
+    ms = 1.5
+    pen = True
+    sticky = True
+    akey = pygame.K_LEFT
+    iconv = {(0, -1): img2("FManu"), (0, 1): img2("FMan"), (1, 0): img2("FManr"), (-1, 0): img2("FManl")}
 
 
 class Ghost(Entity):
@@ -201,13 +224,14 @@ class Ghost(Entity):
     def update(self, world, events):
         if self.anitick == 31:
             self.anitick = 0
-            if world.p.x < self.x:
+            p = world.get_p(self.x, self.y)
+            if p.x < self.x:
                 self.move(-1, 0, 1, world)
-            elif world.p.x > self.x:
+            elif p.x > self.x:
                 self.move(1, 0, 1, world)
-            elif world.p.y > self.y:
+            elif p.y > self.y:
                 self.move(0, 1, 1, world)
-            elif world.p.y < self.y:
+            elif p.y < self.y:
                 self.move(0, -1, 1, world)
 
         else:
@@ -224,13 +248,14 @@ class FGhost(Entity):
     def update(self, world, events):
         if self.anitick == 15:
             self.anitick = 0
-            if world.p.x < self.x:
+            p = world.get_p(self.x, self.y)
+            if p.x < self.x:
                 self.move(-1, 0, 2, world)
-            elif world.p.x > self.x:
+            elif p.x > self.x:
                 self.move(1, 0, 2, world)
-            elif world.p.y > self.y:
+            elif p.y > self.y:
                 self.move(0, 1, 2, world)
-            elif world.p.y < self.y:
+            elif p.y < self.y:
                 self.move(0, -1, 2, world)
 
         else:
@@ -252,13 +277,14 @@ class Thud(Entity):
             else:
                 self.img = self.imgs[1]
         else:
-            if world.p.x == self.x:
-                if world.p.y < self.y:
+            p = world.get_p(self.x, self.y)
+            if p.x == self.x:
+                if p.y < self.y:
                     self.motion = [0, -1]
                 else:
                     self.motion = [0, 1]
-            elif world.p.y == self.y:
-                if world.p.x < self.x:
+            elif p.y == self.y:
+                if p.x < self.x:
                     self.motion = [-1, 0]
                 else:
                     self.motion = [1, 0]
@@ -266,20 +292,22 @@ class Thud(Entity):
 
 class Explosion(Entity):
     img = img2("Exp")
-    pimg=img2("ExpPen")
+    pimg = img2("ExpPen")
     orect = pygame.Rect(6, 6, 20, 20)
     life = 20
     denemy = True
 
-    def __init__(self,x,y,pen):
-        self.place(x,y)
-        self.pen=pen
+    def __init__(self, x, y, pen):
+        self.place(x, y)
+        self.pen = pen
+
     def update(self, world, events):
         self.xoff = randint(-1, 1)
         self.yoff = randint(-1, 1)
         self.life -= 1
         if self.life == 0:
             world.e.remove(self)
+
     def get_img(self):
         return self.pimg if self.pen else self.img
 
@@ -294,7 +322,7 @@ class Bomb(Entity):
         self.y = y
         self.p = p
         self.r = r
-        self.pen=p and p.pen
+        self.pen = p and p.pen
 
     def update(self, world, events):
         self.timer -= 1
@@ -325,13 +353,14 @@ class Penetrating(Entity):
     def collect(self, p):
         p.pen = True
 
+
 class BombPlus(Entity):
     enemy = False
     img = img2("ExBomb")
     powerup = True
 
     def collect(self, p):
-        p.bombs+=1
+        p.bombs += 1
 
 
 class SokoBlock(Entity):
@@ -339,51 +368,57 @@ class SokoBlock(Entity):
     img = img2("SokoBlok")
     pushable = True
     name = "Sokoblock"
+
     def update(self, world, events):
         if not self.moving:
             if world.get_t(self.x, self.y) == 4:
                 world.t[self.x][self.y] = 5
                 world.e.remove(self)
 
+
 class Slime(Entity):
-    anitick=0
-    imgs=imgstrip2("Slime")
-    orect = pygame.Rect(6,10,20,14)
+    anitick = 0
+    imgs = imgstrip2("Slime")
+    orect = pygame.Rect(6, 10, 20, 14)
+
     def update(self, world, events):
-        if self.anitick<31:
-            self.anitick+=1
+        if self.anitick < 31:
+            self.anitick += 1
         else:
-            self.anitick=0
+            self.anitick = 0
         if not self.moving:
-            if self.x==world.p.x:
-                self.move(0,1 if self.y<world.p.y else -1, 2,world)
-            elif self.y==world.p.y:
-                self.move(1 if self.x<world.p.x else -1,0, 2,world)
+            p = world.get_p(self.x, self.y)
+            if self.x == p.x:
+                self.move(0, 1 if self.y < p.y else -1, 2, world)
+            elif self.y == p.y:
+                self.move(1 if self.x < p.x else -1, 0, 2, world)
         if not self.moving:
-            dirs=[[1,0],[0,1],[-1,0],[0,-1]]
+            dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]]
             shuffle(dirs)
-            for dx,dy in dirs:
-                if self.move(dx,dy,0.5,world):
+            for dx, dy in dirs:
+                if self.move(dx, dy, 0.5, world):
                     break
 
     def get_img(self):
-        return self.imgs[self.anitick//8 if self.speed==0.5 else self.anitick//4%4]
+        return self.imgs[self.anitick // 8 if self.speed == 0.5 else self.anitick // 4 % 4]
+
 
 class CannonBall(Entity):
-    img=img2("CannonBall")
-    orect = pygame.Rect(10,10,12,12)
-    def __init__(self,x,y,dx):
-        self.dx=dx
-        self.place(x,y)
-        self.js=True
+    img = img2("CannonBall")
+    orect = pygame.Rect(10, 10, 12, 12)
+
+    def __init__(self, x, y, dx):
+        self.dx = dx
+        self.place(x, y)
+        self.js = True
+
     def update(self, world, events):
         if not self.moving:
-            if not self.js and world.inworld(self.x,self.y) and world.o[self.x][self.y]:
+            if not self.js and world.inworld(self.x, self.y) and world.o[self.x][self.y]:
                 world.e.remove(self)
-            elif world.inworld(self.x,self.y):
-                self.move(self.dx,0,4,world,True)
+            elif world.inworld(self.x, self.y):
+                self.move(self.dx, 0, 4, world, True)
             else:
                 world.e.remove(self)
             if self.js:
-                self.js=False
-
+                self.js = False
