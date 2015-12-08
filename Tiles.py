@@ -57,8 +57,25 @@ class SokoPlateAct(Tile):
         if not gent or gent.name != "Sokoblock":
             world.t[x][y] = 6
 
+class ManPlate(Tile):
+    img = Img.img2("ManPlate")
 
-tiles = (Grass(), Goal(), Ice(), SokoHole(), SokoHoleFilled(), SokoPlate(), SokoPlateAct(), BonusGoal(), WarpGoal())
+    def update(self, world, x, y):
+        gent = world.get_ent(x, y)
+        if gent and gent in world.ps:
+            world.t[x][y] = 11
+
+class ManPlateAct(Tile):
+    img = Img.img2("ManPlateAct")
+
+    def update(self, world, x, y):
+        gent = world.get_ent(x, y)
+        if not gent or gent not in world.ps:
+            world.t[x][y] = 10
+
+
+tiles = (Grass(), Goal(), Ice(), SokoHole(), SokoHoleFilled(), SokoPlate(), SokoPlateAct(), BonusGoal(), WarpGoal(),
+         ManPlate(),ManPlateAct())
 eobjs = ((Img.img2("Block"), 1), (Img.imgstrip("Ghost")[0], 0), (Img.img2("Men/Man2"), 0), (Img.imgstrip2("Thud")[0], 0),
          (Img.img32("RangeUp"), 0), (Img.img2("Grass2"), 1), (Img.imgstrip("FGhost")[0], 0), (Img.img2("SokoBlok"), 0),
          (Img.img2("SokoLok"), 1), (Img.img2("ExpBlock"), 1), (Img.img2("Pen"), 0), (Img.img2("ExBomb"), 0),

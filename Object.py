@@ -36,7 +36,7 @@ class SokoLock(Object):
                 breaking=False
                 for row in world.t:
                     for t in row:
-                        if t==4 or t==6:
+                        if t==4 or t==6 or t==10:
                             breaking=True
                             break
                     if breaking:
