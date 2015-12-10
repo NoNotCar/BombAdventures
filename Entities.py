@@ -384,6 +384,16 @@ class BombPlus(Entity):
     def collect(self, p):
         p.bombs += 1
 
+class NullPower(Entity):
+    enemy = False
+    img = img2("Null")
+    powerup = True
+
+    def collect(self, p):
+        p.bombs = 0
+        p.rng = 0
+        p.pen = False
+
 
 class SokoBlock(Entity):
     enemy = False
@@ -396,6 +406,22 @@ class SokoBlock(Entity):
             if world.get_t(self.x, self.y) == 4:
                 world.t[self.x][self.y] = 5
                 world.e.remove(self)
+
+class SokoBlokSlippy(SokoBlock):
+    img=img2("SokoBlokIce")
+    def update(self, world, events):
+        if not self.moving:
+            if world.get_t(self.x, self.y) == 4:
+                world.t[self.x][self.y] = 5
+                world.e.remove(self)
+            if self.dx!=0 or self.dy!=0:
+                if not self.move(self.dx,self.dy,self.speed,world):
+                    self.dx=0
+                    self.dy=0
+
+class SokoBlockGoo(SokoBlock):
+    img = img2("SokoBlokGoo")
+    sticky = True
 
 
 class Slime(Entity):

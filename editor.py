@@ -63,7 +63,7 @@ while True:
             if seltype:
                 w.t[mpos[0]//32][mpos[1]//32]=0 if kmods&pygame.KMOD_LSHIFT else Tiles.tilemenus[selmenu][selobjs[selmenu]]+1
             else:
-                w.o[mpos[0]//32][mpos[1]//32]=0 if kmods&pygame.KMOD_LSHIFT else Tiles.objmenus[selmenu-len(Tiles.objmenus)-1][selobjs[selmenu]]+1
+                w.o[mpos[0]//32][mpos[1]//32]=0 if kmods&pygame.KMOD_LSHIFT else Tiles.objmenus[selmenu-len(Tiles.tilemenus)][selobjs[selmenu]]+1
     screen.fill((125, 255, 255))
     w.render(screen)
     for n in range(19):
