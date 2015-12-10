@@ -74,12 +74,27 @@ class ManPlateAct(Tile):
             world.t[x][y] = 10
 
 
+class DarkMatter(Tile):
+    img = Img.img2("DarkMatter")
+
+    def update(self, world, x, y):
+        gent = world.get_ent(x, y)
+        if gent and not gent.moving and not gent.darkresist:
+            if gent in world.ps:
+                world.playerdead=True
+            else:
+                world.e.remove(gent)
+            world.create_exp(x,y,0,True)
+
+
 tiles = (Grass(), Goal(), Ice(), SokoHole(), SokoHoleFilled(), SokoPlate(), SokoPlateAct(), BonusGoal(), WarpGoal(),
-         ManPlate(),ManPlateAct())
+         ManPlate(),ManPlateAct(), DarkMatter())
 eobjs = ((Img.img2("Block"), 1), (Img.imgstrip("Ghost")[0], 0), (Img.img2("Men/Man2"), 0), (Img.imgstrip2("Thud")[0], 0),
          (Img.img32("RangeUp"), 0), (Img.img2("Grass2"), 1), (Img.imgstrip("FGhost")[0], 0), (Img.img2("SokoBlok"), 0),
          (Img.img2("SokoLok"), 1), (Img.img2("ExpBlock"), 1), (Img.img2("Pen"), 0), (Img.img2("ExBomb"), 0),
          (Img.imgsz("GhostSpawn", (32, 40)), 1), (Img.imgstrip2("Slime")[0], 0), (Img.img2("CannonBlock"), 1),
          (Img.img2("Men/SMan"), 0),(Img.img2("Men/FMan"), 0),(Img.img2("Men/TMan"), 0))
+tilemenus=([0],(2,11),(1,7,8),(3,4,5,8))
+objmenus=((0,5,9),(1,3,6,12,13,14),(2,15,16,17))
 eents = {2: Entities.Ghost, 4: Entities.Thud, 5: Entities.RangeUp, 7: Entities.FGhost, 8: Entities.SokoBlock,
          11: Entities.Penetrating, 12: Entities.BombPlus, 14: Entities.Slime}

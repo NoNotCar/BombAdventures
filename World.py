@@ -23,7 +23,9 @@ class World(object):
         else:
             self.e = []
             self.ps=[]
-            if len(level)==2:
+            if level=="sav":
+                savfile = open(Img.np("lvls//save.sav"), "r")
+            elif len(level)==2:
                 savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
             else:
                 savfile = open(Img.np("lvls//%s-%s-%s.sav" % tuple(level)), "r")
@@ -54,7 +56,6 @@ class World(object):
                             self.e.append(self.ps[-1])
                             self.akey=self.ps[-1].akey
             savfile.close()
-
     def update(self, ev):
         for e in ev:
             if e.type==pygame.KEYDOWN:
@@ -117,6 +118,7 @@ class World(object):
 
     def save(self):
         savfile = open("lvls//save.sav", "w")
+        savfile.write("\n")
         for row in self.t:
             savfile.write(" ".join([str(t) for t in row]) + "\n")
         for row in self.o:

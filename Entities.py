@@ -52,6 +52,7 @@ class Entity(object):
     dy = 0
     ignore = False
     sticky = False
+    darkresist=False
 
     def __init__(self, x, y):
         self.x = x
@@ -309,6 +310,7 @@ class Explosion(Entity):
     orect = pygame.Rect(6, 6, 20, 20)
     life = 20
     denemy = True
+    darkresist = True
 
     def __init__(self, x, y, pen):
         self.place(x, y)
@@ -329,7 +331,7 @@ class Bomb(Entity):
     enemy = False
     timer = 120
     img = img2("Bomb")
-
+    darkresist = True
     def __init__(self, x, y, r, p=False):
         self.x = x
         self.y = y
