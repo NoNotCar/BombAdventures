@@ -21,6 +21,8 @@ worlds = [World([Img.img2("Grass"), Img.img2("Block"), Img.img2("Grass2")], "Cum
           World([Img.img2("RockSnow"), Img.img2("RedBlock"), Img.img2("CastleIn"), Img.img2("RockIce")], "W5V",
                 (255, 93, 0), (200, 59, 0)),
           World([Img.img2("PinkGround"), Img.img2("PinkBlock"), Img.img2("Pink2"), Img.img2("PinkIce")], "DOMINIK_4", (255, 186, 245),
-                (255, 81, 226))]
+                (255, 81, 226)),
+          World([Img.img2("RedGrass"), Img.img2("RedBlock"), Img.img2("CastleIn"), Img.img2("RockIce")], "Devil",
+                (84, 2, 0), (133, 5, 1))]
 castle = World([Img.img2("CastleFloor"), Img.img2("CastleBlock"), Img.img2("CastleIn")], "Flags", (125, 125, 125),
                (200, 200, 200))

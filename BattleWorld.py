@@ -1,69 +1,45 @@
 __author__ = 'NoNotCar'
 import Img, Entities, Tiles, Object, FX, pygame
 from random import randint
+import BattlePlayers
 
 powerup = Img.sndget("powerup")
 exp = Img.sndget("explode")
 
 
 class World(object):
-    def __init__(self, edit, level=None):
-        self.edit = edit
-        self.playerdead = False
+    pconv=[BattlePlayers.Player,BattlePlayers.FatPlayer,BattlePlayers.SmallPlayer,BattlePlayers.ThinPlayer]
+    def __init__(self, level, players,controllers):
         self.done = False
         self.level = level
         self.exitcode="NORMAL"
-        if edit:
-            self.t = []
-            self.o = []
-            for _ in range(20):
-                self.t.append([0] * 20)
-                self.o.append([0] * 20)
-            self.e = []
-        else:
-            self.e = []
-            self.ps=[]
-            if level=="sav":
-                savfile = open(Img.np("lvls//save.sav"), "r")
-            elif len(level)==2:
-                savfile = open(Img.np("lvls//%s-%s.sav" % tuple(level)), "r")
-            else:
-                savfile = open(Img.np("lvls//%s-%s-%s.sav" % tuple(level)), "r")
-            self.t = []
-            self.o = []
-            self.fx = []
-            self.bfx = []
-            if level[0]==3 and level[1]!=8:
-                for _ in range(randint(50,60)):
-                    self.bfx.append(FX.Star(randint(0,638),randint(0,638)))
-            savr = savfile.readlines()
-            self.fltext = savr[0][:-1]
-            del savr[0]
-            for row in savr[:20]:
-                self.t.append([int(s) for s in row.split()])
-            for x, row in enumerate(savr[20:]):
-                self.o.append([None] * 20)
-                crow = [int(s) for s in row.split()]
-                for y, n in enumerate(crow):
-                    if n:
-                        eo = self.eoconvert(n)
-                        if eo[1] == "obj":
-                            self.o[x][y] = eo[0](x, y)
-                        elif eo[1] == "ent":
-                            self.e.append(eo[0](x, y))
-                        elif eo[1] == "spawn":
-                            self.ps.append(eo[0](x, y))
-                            self.e.append(self.ps[-1])
-                            self.akey=self.ps[-1].akey
-            savfile.close()
+        self.e = []
+        self.ps=[]
+        savfile = open(Img.np("lvls//battle//"+level), "r")
+        self.t = []
+        self.o = []
+        self.fx = []
+        self.bfx = []
+        pn=0
+        savr = savfile.readlines()
+        for row in savr[:20]:
+            self.t.append([int(s) for s in row.split()])
+        for x, row in enumerate(savr[20:]):
+            self.o.append([None] * 20)
+            crow = [int(s) for s in row.split()]
+            for y, n in enumerate(crow):
+                if n:
+                    eo = self.eoconvert(n)
+                    if eo[1] == "obj":
+                        self.o[x][y] = eo[0](x, y)
+                    elif eo[1] == "ent":
+                        self.e.append(eo[0](x, y))
+                    elif eo[1] == "spawn":
+                        self.ps.append(self.pconv[players[pn]](x, y, controllers[pn]))
+                        self.e.append(self.ps[-1])
+                        pn+=1
+        savfile.close()
     def update(self, ev):
-        for e in ev:
-            if e.type==pygame.KEYDOWN:
-                if e.key in [pygame.K_UP, pygame.K_DOWN,pygame.K_LEFT,pygame.K_RIGHT]:
-                    if e.key in [p.akey for p in self.ps]:
-                        self.akey=e.key
-        if self.level[0] in [2,6] and not randint(0, 3):
-            self.fx.append(FX.Snow(randint(0, 628), -12))
         for e in self.e[:]:
             if e.moving:
                 e.mupdate(self)
@@ -80,9 +56,10 @@ class World(object):
                     e.invtime=20
                 else:
                     self.e.remove(e)
-        for p in self.ps:
+        for p in self.ps[:]:
             if p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
-                self.playerdead = True
+                self.ps.remove(p)
+                self.e.remove(p)
         for row in self.o:
             for o in row:
                 if o:
@@ -100,36 +77,20 @@ class World(object):
                 if t:
                     Tiles.tiles[t-1].update(self,x,y)
     def render(self, s):
-        if not self.edit:
-            for fx in self.bfx:
-                s.blit(fx.img, (fx.x, fx.y))
+        for fx in self.bfx:
+            s.blit(fx.img, (fx.x, fx.y))
         for x, r in enumerate(self.t):
             for y, t in enumerate(r):
                 if t:
                     s.blit(Tiles.tiles[t - 1].img, (x * 32, y * 32))
         for e in self.e:
             s.blit(e.get_img(), (e.x * 32 + e.xoff, e.y * 32 + e.yoff))
-        if self.edit:
-            for x, r in enumerate(self.o):
-                for y, o in enumerate(r):
-                    if o:
-                        s.blit(Tiles.eobjs[o - 1][0], (x * 32, y * 32 - Tiles.eobjs[o - 1][1] * 8))
-        else:
-            for x, r in enumerate(self.o):
-                for y, o in enumerate(r):
-                    if o:
-                        s.blit(o.get_img(), (x * 32, y * 32 - 8 * o.is3d))
-            for fx in self.fx:
-                s.blit(fx.img, (fx.x, fx.y))
-
-    def save(self):
-        savfile = open("lvls//save.sav", "w")
-        savfile.write("\n")
-        for row in self.t:
-            savfile.write(" ".join([str(t) for t in row]) + "\n")
-        for row in self.o:
-            savfile.write(" ".join([str(t) for t in row]) + "\n")
-        savfile.close()
+        for x, r in enumerate(self.o):
+            for y, o in enumerate(r):
+                if o:
+                    s.blit(o.get_img(), (x * 32, y * 32 - 8 * o.is3d))
+        for fx in self.fx:
+            s.blit(fx.img, (fx.x, fx.y))
 
     def inworld(self, x, y):
         return 0 <= x < 20 and 0 <= y < 20
@@ -168,7 +129,7 @@ class World(object):
         elif eo in Tiles.eents.keys():
             return Tiles.eents[eo], "ent"
         elif eo == 3:
-            return Entities.Player, "spawn"
+            return BattlePlayers.Player, "spawn"
         elif eo == 6:
             return Object.Indest, "obj"
         elif eo == 9:
@@ -180,11 +141,11 @@ class World(object):
         elif eo == 15:
             return Object.CannonBlock,"obj"
         elif eo == 16:
-            return Entities.SmallPlayer, "spawn"
+            return BattlePlayers.SmallPlayer, "spawn"
         elif eo == 17:
-            return Entities.FatPlayer, "spawn"
+            return BattlePlayers.FatPlayer, "spawn"
         elif eo == 18:
-            return Entities.ThinPlayer, "spawn"
+            return BattlePlayers.ThinPlayer, "spawn"
 
     def create_exp(self, fx, fy, r, p=False):
         exp.play()

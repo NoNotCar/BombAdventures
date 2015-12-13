@@ -1,7 +1,7 @@
 __author__ = 'NoNotCar'
 from Img import img2, img32, imgstrip, imgstrip2, loc, np
 from random import choice, randint, shuffle
-import pygame
+import pygame, math
 
 
 def iround(fl):
@@ -53,6 +53,8 @@ class Entity(object):
     ignore = False
     sticky = False
     darkresist=False
+    hp=0
+    invtime=0
 
     def __init__(self, x, y):
         self.x = x
@@ -155,6 +157,12 @@ class Entity(object):
     def place(self, x, y):
         self.x = x
         self.y = y
+
+    def aplace(self,ax,ay):
+        self.x=int(ax//32)
+        self.y=int(ay//32)
+        self.xoff=int(round(ax%32))
+        self.yoff=int(round(ay%32))
 
 
 class Player(Entity):
@@ -276,6 +284,31 @@ class FGhost(Entity):
             self.anitick += 1
         self.img = self.imgs[self.anitick // 4]
 
+class TGhost(Ghost):
+    timgs = imgstrip("TGhost")
+    img=timgs[0]
+    hp = 1
+    def update(self, world, events):
+        if self.anitick == 31:
+            self.anitick = 0
+            p = world.get_p(self.x, self.y)
+            if p.x < self.x:
+                self.move(-1, 0, 1, world)
+            elif p.x > self.x:
+                self.move(1, 0, 1, world)
+            elif p.y > self.y:
+                self.move(0, 1, 1, world)
+            elif p.y < self.y:
+                self.move(0, -1, 1, world)
+
+        else:
+            self.anitick += 1
+        if self.hp:
+            self.img = self.timgs[self.anitick // 8]
+        else:
+            self.img = self.imgs[self.anitick // 8]
+
+
 
 class Thud(Entity):
     imgs = imgstrip2("Thud")
@@ -332,6 +365,7 @@ class Bomb(Entity):
     timer = 120
     img = img2("Bomb")
     darkresist = True
+    name = "Bomb"
     def __init__(self, x, y, r, p=False):
         self.x = x
         self.y = y
@@ -342,7 +376,7 @@ class Bomb(Entity):
 
     def update(self, world, events):
         if self.rd:
-            if self.p.detonate:
+            if self.p.detonate or self.timer==1:
                 world.create_exp(self.x, self.y, self.r, self.pen)
                 world.e.remove(self)
                 self.p.bombs += 1
@@ -470,3 +504,13 @@ class CannonBall(Entity):
                 world.e.remove(self)
             if self.js:
                 self.js = False
+
+class Fireball(Entity):
+    img = img2("Fireball")
+    orect = pygame.Rect(10,10,12,12)
+    enemy = True
+    def __init__(self,x,y,ang,spd):
+        self.speed=spd
+        self.ang=ang
+        self.ax=x*32
+        self.ay=y*32
