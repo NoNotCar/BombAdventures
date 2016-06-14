@@ -15,15 +15,24 @@ clock = pygame.time.Clock()
 breaking = False
 man=Img.img2("Men/Man2r")
 wnum=1
+progress={x:"" for x in range(1,9)}
 expimg=Img.img2("Exp")
 pexpimg=Img.img2("ExpPen")
 bombimg=Img.img2("Bomb")
 Img.musplay("OF.ogg")
+cimgs={"N":Img.img("NComplete"),"S":Img.img("SComplete"),"C":Img.img("Complete")}
 try:
     savefile=open("SAVE.sav","r")
     save=savefile.readline()
-    if Save.load(save):
-        wnum=Save.load(save)
+    snum,sprog=save.split("/")
+    if Save.load(snum):
+        wnum=Save.load(snum)
+        n=0
+        for c in sprog:
+            if c in "12345678":
+                n+=1
+            else:
+                progress[n]=c
     savefile.close()
 except IOError:
     pass
@@ -42,6 +51,7 @@ while not breaking:
 breaking=False
 wselnum=0
 mx=0
+lselecting=False
 while not breaking:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -52,16 +62,50 @@ while not breaking:
             if 0<=sel<wnum and sel<len(worlds):
                 wselnum=sel+1
                 breaking=True
+                if progress[wselnum]:
+                    lselecting=True
     screen.fill((0, 0, 0))
     Img.bcentrex(tfont,"SELECT WORLD",screen,2,(255,255,255))
     for n,w in enumerate(worlds[:wnum]):
         pygame.draw.rect(screen,w.loadcolour,pygame.Rect(0,n*64+66,640,64))
         Img.bcentrex(tfont,"WORLD %s" % str(n+1),screen,n*64+70)
+        if progress[n+1]:
+            screen.blit(cimgs[progress[n+1]],(576,n*64+66))
     screen.blit(man,(mx-32,646))
     mx=(mx+2)%672
     pygame.display.flip()
     clock.tick(60)
-level=[wselnum,1]
+if lselecting:
+    lsel=None
+    breaking=False
+    if progress[wselnum]=="S":
+        lset=[1,8,"A"]
+    else:
+        lset=range(1,9)
+        if progress[wselnum]=="C":
+            lset.append("A")
+    while not breaking:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                my=pygame.mouse.get_pos()[1]
+                sel=(my-70)//64
+                if 0<=sel<wnum and sel<len(lset):
+                    lsel=lset[sel]
+                    breaking=True
+        screen.fill((0, 0, 0))
+        Img.bcentrex(tfont,"SELECT LEVEL",screen,2,(255,255,255))
+        for n,l in enumerate(lset):
+            pygame.draw.rect(screen,worlds[wselnum-1].loadcolour,pygame.Rect(0,n*64+66,640,64))
+            Img.bcentrex(tfont,"WORLD %s-%s" % (str(wselnum),str(l)),screen,n*64+70)
+        screen.blit(man,(mx-32,646))
+        mx=(mx+2)%672
+        pygame.display.flip()
+        clock.tick(60)
+    level=[wselnum,lsel]
+else:
+    level=[wselnum,1]
 success.play()
 pygame.mixer.music.stop()
 pygame.time.wait(1000)
@@ -132,10 +176,24 @@ while True:
                 savefile=open("SAVE.sav","w")
                 savefile.write(Save.save(level[0]))
                 savefile.close()
+            else:
+                savefile=open("SAVE.sav","w")
+                savefile.write(Save.save(wnum)+"/")
+                savefile.write("".join([str(w)+s for w,s in progress.iteritems()]))
+                savefile.close()
         elif level[1]=="A":
+            if progress[level[0]]=="N":
+                progress[level[0]]="C"
+            elif progress[level[0]]=="":
+                progress[level[0]]="S"
             level=[level[0],8]
         elif w.exitcode=="SECRET":
             level=[level[0],"A"]
         else:
             level[1]+=1
+        if level[1]==7:
+            if progress[level[0]]=="S":
+                progress[level[0]]="C"
+            elif progress[level[0]]=="":
+                progress[level[0]]="N"
     pygame.time.wait(1000)

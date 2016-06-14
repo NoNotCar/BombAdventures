@@ -6,7 +6,8 @@ np = os.path.normpath
 loc = os.getcwd() + "/Assets/"
 pygame.mixer.init()
 
-
+def img(fil):
+    return pygame.image.load(np(loc + fil + ".png"))
 def img2(fil):
     return pygame.transform.scale2x(pygame.image.load(np(loc + fil + ".png"))).convert_alpha()
 

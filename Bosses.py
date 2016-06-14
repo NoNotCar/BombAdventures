@@ -169,7 +169,7 @@ class BigSlime(Entity):
     anitick = 0
     imgs = imgstrip2("BigSlime")
     orect = pygame.Rect(12, 20, 40, 28)
-    hp=3
+    hp=0
     initing=True
     tplocs=[(1,19),(16,2),(17,19)]
     def update(self, world, events):
