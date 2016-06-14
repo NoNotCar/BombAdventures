@@ -16,7 +16,7 @@ pexpimg=Img.img2("ExpPen")
 bombimg=Img.img2("Bomb")
 tickimg=Img.img2("Tick")
 crossimg=Img.img2("Null")
-pimgs=[Img.img2("men/"+x) for x in ["Man2","FMan","SMan","Tman"]]
+pimgs=[Img.img2("men/"+x) for x in ["Man2","FMan","SMan","Tman"]]#+[Img.imgstrip("men/CMan")[0]]
 breaking = False
 Img.musplay("OF.ogg")
 while not breaking:
@@ -31,7 +31,7 @@ while not breaking:
     pygame.display.flip()
     clock.tick(60)
 breaking=False
-controllers=[Controllers.Keyboard1(),Controllers.Keyboard2()]
+controllers=[Controllers.Keyboard1(),Controllers.Keyboard2()]+[Controllers.UniJoyController(n) for n in range(pygame.joystick.get_count())]
 activecons=[]
 acps=[]
 rsps=[]
@@ -73,9 +73,11 @@ while not breaking:
     pygame.display.flip()
     clock.tick(60)
 while True:
-    w=BattleWorld.World(choice(os.listdir(Img.np("lvls/battle/"))), rsps,rsc)
+    lvls=os.listdir(Img.np("lvls/battle/"))
+    lvls=[lvl for lvl in lvls if lvl[0]==str(len(rsps))]
+    w=BattleWorld.World(choice(lvls), rsps,rsc)
     Img.musplay("Cumulo.ogg")
-    while len(w.ps)==2:
+    while len(w.ps)>=2:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:

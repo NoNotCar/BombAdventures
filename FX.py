@@ -29,6 +29,44 @@ class Star(FX):
         else:
             self.img=self.simg
 
+class TPFX(FX):
+    imgs=Img.imgstrip("TeleportFX")
+    anitick=0
+    img=imgs[0]
+    def update(self,world):
+        self.anitick+=1
+        self.img=self.imgs[self.anitick//2]
+        if self.anitick==11:
+            world.fx.remove(self)
+class Missile(FX):
+    img=Img.img2("Missile")
+    def __init__(self,x,y,ty):
+        self.x=x
+        self.y=y
+        self.ty=ty
+    def update(self,world):
+        if self.y<self.ty-16:
+            self.y+=4
+        else:
+            world.fx.remove(self)
+class MissileTarget(FX):
+    rimg=Img.img2("Target")
+    wimg=Img.img2("TargetW")
+    imgn=0
+    img=rimg
+    def __init__(self,x,y,m):
+        self.x=x
+        self.y=y
+        self.m=m
+    def update(self,world):
+        if self.m not in world.fx:
+            world.fx.remove(self)
+            world.create_exp(self.x//32,self.y//32,20, True)
+        if self.imgn<3:
+            self.imgn+=1
+        else:
+            self.imgn=0
+        self.img=[self.rimg,self.wimg][self.imgn//2]
 class Fez(FX):
     img = Img.img2("Fez")
     def update(self,world):

@@ -1,5 +1,5 @@
 __author__ = 'NoNotCar'
-import Img, Entities, Tiles, Object, FX, pygame
+import Img, Entities, Tiles, Object, FX, pygame, Bosses
 from random import randint
 
 powerup = Img.sndget("powerup")
@@ -7,6 +7,9 @@ exp = Img.sndget("explode")
 
 
 class World(object):
+    rumbling=0
+    rtime=0
+    boss=None
     def __init__(self, edit, level=None):
         self.edit = edit
         self.playerdead = False
@@ -55,6 +58,14 @@ class World(object):
                             self.ps.append(eo[0](x, y))
                             self.e.append(self.ps[-1])
                             self.akey=self.ps[-1].akey
+                        elif eo[1] == "gravblock":
+                            self.e.append(Entities.SokoBlokGrav(x,y,eo[0]))
+            if level[1]==8:
+                try:
+                    self.boss=Bosses.bosses[level[0]-1](9,9)
+                    self.e.append(self.boss)
+                except IndexError:
+                    pass
             savfile.close()
     def update(self, ev):
         for e in ev:
@@ -77,9 +88,11 @@ class World(object):
             if e.rect.collidelist(dangers) != -1:
                 if e.hp:
                     e.hp-=1
-                    e.invtime=20
+                    e.invtime=e.invoverride
                 else:
                     self.e.remove(e)
+                    if e is self.boss:
+                        self.done=60
         for p in self.ps:
             if p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
                 self.playerdead = True
@@ -99,28 +112,40 @@ class World(object):
             for y, t in enumerate(r):
                 if t:
                     Tiles.tiles[t-1].update(self,x,y)
+        if self.rtime>0:
+            self.rtime-=1
+            if self.rtime==0 and self.rumbling>0:
+                self.rumbling-=1
+                if self.rumbling>0:
+                    self.rtime=10
     def render(self, s):
-        if not self.edit:
-            for fx in self.bfx:
-                s.blit(fx.img, (fx.x, fx.y))
-        for x, r in enumerate(self.t):
-            for y, t in enumerate(r):
-                if t:
-                    s.blit(Tiles.tiles[t - 1].img, (x * 32, y * 32))
-        for e in self.e:
-            s.blit(e.get_img(), (e.x * 32 + e.xoff, e.y * 32 + e.yoff))
-        if self.edit:
-            for x, r in enumerate(self.o):
-                for y, o in enumerate(r):
-                    if o:
-                        s.blit(Tiles.eobjs[o - 1][0], (x * 32, y * 32 - Tiles.eobjs[o - 1][1] * 8))
+        rx=randint(-self.rumbling,self.rumbling)
+        ry=randint(-self.rumbling,self.rumbling)
+        if self.rumbling==10 and not randint(0,5):
+            s.fill((255,255,255))
         else:
-            for x, r in enumerate(self.o):
-                for y, o in enumerate(r):
-                    if o:
-                        s.blit(o.get_img(), (x * 32, y * 32 - 8 * o.is3d))
-            for fx in self.fx:
-                s.blit(fx.img, (fx.x, fx.y))
+            if not self.edit:
+                for fx in self.bfx:
+                    s.blit(fx.img, (fx.x+rx, fx.y+ry))
+            for x, r in enumerate(self.t):
+                for y, t in enumerate(r):
+                    if t:
+                        s.blit(Tiles.tiles[t - 1].img, (x * 32+rx, y * 32+ry))
+            for e in self.e:
+                if not e.hidden:
+                    s.blit(e.get_img(), (e.x * 32 + e.xoff+ rx, e.y * 32 + e.yoff+ry))
+            if self.edit:
+                for x, r in enumerate(self.o):
+                    for y, o in enumerate(r):
+                        if o:
+                            s.blit(Tiles.eobjs[o - 1][0], (x * 32+rx, y * 32 - Tiles.eobjs[o - 1][1] * 8+ry))
+            else:
+                for x, r in enumerate(self.o):
+                    for y, o in enumerate(r):
+                        if o:
+                            s.blit(o.get_img(), (x * 32+rx, y * 32 - 8 * o.is3d+ry))
+                for fx in self.fx:
+                    s.blit(fx.img, (fx.x+rx, fx.y+ry))
 
     def save(self):
         savfile = open("lvls//save.sav", "w")
@@ -138,7 +163,7 @@ class World(object):
         if not self.inworld(x,y):
             return False
         for e in self.e:
-            if e.x == x and e.y == y:
+            if e.solid and e.x == x and e.y == y:
                 if ent and ((ent in self.ps and (e.enemy or e.powerup)) or (ent.enemy and e in self.ps)):
                     if e.powerup:
                         self.e.remove(e)
@@ -161,7 +186,12 @@ class World(object):
         for e in self.e:
             if (e.x, e.y) == (x, y):
                 return e
-
+    def get_ents(self,x,y):
+        ents=[]
+        for e in self.e:
+            if (e.x, e.y) == (x, y):
+                ents.append(e)
+        return ents
     def eoconvert(self, eo):
         if eo == 1:
             return Object.Block, "obj"
@@ -185,8 +215,14 @@ class World(object):
             return Entities.FatPlayer, "spawn"
         elif eo == 18:
             return Entities.ThinPlayer, "spawn"
+        elif 22<eo<=26:
+            return eo-23, "gravblock"
 
     def create_exp(self, fx, fy, r, p=False):
+        self.rtime=10
+        self.rumbling+=r*(p+1)
+        if self.rumbling>10:
+            self.rumbling=10
         exp.play()
         self.explode(fx, fy,p)
         for dx, dy in [[0, 1], [1, 0], [0, -1], [-1, 0]]:

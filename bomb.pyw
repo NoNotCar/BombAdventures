@@ -10,6 +10,7 @@ import Tiles,Object,Save
 pdf = pygame.font.get_default_font()
 tfont=pygame.font.Font(pdf,60)
 sfont=pygame.font.Font(pdf,20)
+bfont=pygame.font.Font(pdf,32)
 clock = pygame.time.Clock()
 breaking = False
 man=Img.img2("Men/Man2r")
@@ -91,7 +92,7 @@ while True:
     pygame.event.get()
     warplevel=1
     while True:
-        while not (w.playerdead or w.done):
+        while not (w.playerdead or w.done==1):
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
@@ -106,8 +107,14 @@ while True:
                 screen.blit(pexpimg if ap.pen else expimg, (32+n*32,640))
             for x in range(ap.bombs):
                 screen.blit(bombimg,(64+n*32+x*32,640))
+            if w.boss:
+                if w.boss in w.e:
+                    pygame.draw.rect(screen,(255,0,0),pygame.Rect(320-(w.boss.hp+1)*25,608,(w.boss.hp+1)*50,32))
+                Img.bcentrex(bfont,"BOSS",screen,608)
             pygame.display.flip()
             clock.tick(60)
+            if w.done>1:
+                w.done-=1
         if w.exitcode!="WARP":
             break
         else:
@@ -119,12 +126,14 @@ while True:
     pygame.mixer.music.stop()
     if w.done:
         success.play()
-        if level[1] in [8,"A"]:
+        if level[1] == 8:
             level=[level[0]+1,1]
             if level[0]>wnum:
                 savefile=open("SAVE.sav","w")
                 savefile.write(Save.save(level[0]))
                 savefile.close()
+        elif level[1]=="A":
+            level=[level[0],8]
         elif w.exitcode=="SECRET":
             level=[level[0],"A"]
         else:

@@ -1,8 +1,11 @@
 __author__ = 'NoNotCar'
-from Img import img2, img32, imgstrip, imgstrip2, loc, np
+from Img import img2, img32, imgstrip, imgstrip2
 from random import choice, randint, shuffle
 import pygame, math
 
+pi=math.pi
+tau=2*pi
+right=pi/2
 
 def iround(fl):
     return int(round(fl))
@@ -33,7 +36,7 @@ class Path(object):
 
 class Entity(object):
     # Anything that can move
-    solid = False
+    solid = True
     name = "Entity"
     hidden = False
     xoff = 0
@@ -52,9 +55,10 @@ class Entity(object):
     dy = 0
     ignore = False
     sticky = False
-    darkresist=False
-    hp=0
-    invtime=0
+    darkresist = False
+    hp = 0
+    invtime = 0
+    invoverride=20
 
     def __init__(self, x, y):
         self.x = x
@@ -157,12 +161,21 @@ class Entity(object):
     def place(self, x, y):
         self.x = x
         self.y = y
+        self.xoff=0
+        self.yoff=0
+        self.moving=False
 
-    def aplace(self,ax,ay):
-        self.x=int(ax//32)
-        self.y=int(ay//32)
-        self.xoff=int(round(ax%32))
-        self.yoff=int(round(ay%32))
+    def aplace(self, ax, ay):
+        self.x = int(ax // 32)
+        self.y = int(ay // 32)
+        self.xoff = int(round(ax % 32))
+        self.yoff = int(round(ay % 32))
+        if self.xoff >= 16:
+            self.xoff-=32
+            self.x += 1
+        if self.yoff >= 16:
+            self.yoff-=32
+            self.y += 1
 
 
 class Player(Entity):
@@ -173,15 +186,16 @@ class Player(Entity):
     rng = 2
     pen = False
     dy = 1
-    iconv = {(0, -1): img2("Men/Man2u"), (0, 1): img2("Men/Man2"), (1, 0): img2("Men/Man2r"), (-1, 0): img2("Men/Man2l")}
+    iconv = {(0, -1): img2("Men/Man2u"), (0, 1): img2("Men/Man2"), (1, 0): img2("Men/Man2r"),
+             (-1, 0): img2("Men/Man2l")}
     ms = 2
     akey = pygame.K_UP
-    rd=False
-    detonate=False
+    rd = False
+    detonate = False
 
     def update(self, world, events):
         if self.detonate:
-            self.detonate=False
+            self.detonate = False
         if world.akey == self.akey:
             keys = pygame.key.get_pressed()
             for k, v in self.kconv.iteritems():
@@ -189,13 +203,17 @@ class Player(Entity):
                     break
             for e in events:
                 if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE and self.bombs:
-                    world.e.append(
-                        Bomb(iround((self.x * 32 + self.xoff) / 32.0), iround((self.y * 32 + self.yoff) / 32.0),
-                             self.rng,
-                             self))
-                    self.bombs -= 1
+                    for e in world.get_ents(self.x,self.y):
+                        if e.name=="Bomb":
+                            break
+                    else:
+                        world.e.append(
+                            Bomb(iround((self.x * 32 + self.xoff) / 32.0), iround((self.y * 32 + self.yoff) / 32.0),
+                                 self.rng,
+                                 self))
+                        self.bombs -= 1
                 elif e.type == pygame.KEYDOWN and e.key == pygame.K_LSHIFT and self.rd:
-                    self.detonate=True
+                    self.detonate = True
         if not self.moving:
             tile = world.t[self.x][self.y]
             if tile == 2:
@@ -215,7 +233,8 @@ class SmallPlayer(Player):
     orect = pygame.Rect(12, 4, 8, 24)
     rng = 1
     ms = 4
-    iconv = {(0, -1): img2("Men/SManu"), (0, 1): img2("Men/SMan"), (1, 0): img2("Men/SManr"), (-1, 0): img2("Men/SManl")}
+    iconv = {(0, -1): img2("Men/SManu"), (0, 1): img2("Men/SMan"), (1, 0): img2("Men/SManr"),
+             (-1, 0): img2("Men/SManl")}
     akey = pygame.K_DOWN
 
 
@@ -227,14 +246,17 @@ class FatPlayer(Player):
     pen = True
     sticky = True
     akey = pygame.K_LEFT
-    iconv = {(0, -1): img2("Men/FManu"), (0, 1): img2("Men/FMan"), (1, 0): img2("Men/FManr"), (-1, 0): img2("Men/FManl")}
+    iconv = {(0, -1): img2("Men/FManu"), (0, 1): img2("Men/FMan"), (1, 0): img2("Men/FManr"),
+             (-1, 0): img2("Men/FManl")}
+
 
 class ThinPlayer(Player):
     orect = pygame.Rect(12, 2, 8, 28)
     rng = 3
     rd = True
     akey = pygame.K_RIGHT
-    iconv = {(0, -1): img2("Men/TManu"), (0, 1): img2("Men/TMan"), (1, 0): img2("Men/TManr"), (-1, 0): img2("Men/TManl")}
+    iconv = {(0, -1): img2("Men/TManu"), (0, 1): img2("Men/TMan"), (1, 0): img2("Men/TManr"),
+             (-1, 0): img2("Men/TManl")}
 
 
 class Ghost(Entity):
@@ -284,10 +306,12 @@ class FGhost(Entity):
             self.anitick += 1
         self.img = self.imgs[self.anitick // 4]
 
+
 class TGhost(Ghost):
     timgs = imgstrip("TGhost")
-    img=timgs[0]
+    img = timgs[0]
     hp = 1
+
     def update(self, world, events):
         if self.anitick == 31:
             self.anitick = 0
@@ -308,7 +332,29 @@ class TGhost(Ghost):
         else:
             self.img = self.imgs[self.anitick // 8]
 
+class FireGhost(Ghost):
+    imgs=imgstrip("FireGhost")
+    img=imgs[0]
+    fspawn=True
+    def update(self, world, events):
+        if self.fspawn:
+            world.e.append(OrbitFireball(96,2,self))
+            self.fspawn=False
+        if self.anitick == 31:
+            self.anitick = 0
+            p = world.get_p(self.x, self.y)
+            if p.x < self.x:
+                self.move(-1, 0, 1, world)
+            elif p.x > self.x:
+                self.move(1, 0, 1, world)
+            elif p.y > self.y:
+                self.move(0, 1, 1, world)
+            elif p.y < self.y:
+                self.move(0, -1, 1, world)
 
+        else:
+            self.anitick += 1
+        self.img = self.imgs[self.anitick // 8]
 
 class Thud(Entity):
     imgs = imgstrip2("Thud")
@@ -366,6 +412,7 @@ class Bomb(Entity):
     img = img2("Bomb")
     darkresist = True
     name = "Bomb"
+
     def __init__(self, x, y, r, p=False):
         self.x = x
         self.y = y
@@ -376,7 +423,7 @@ class Bomb(Entity):
 
     def update(self, world, events):
         if self.rd:
-            if self.p.detonate or self.timer==1:
+            if self.p.detonate or self.timer == 1:
                 world.create_exp(self.x, self.y, self.r, self.pen)
                 world.e.remove(self)
                 self.p.bombs += 1
@@ -418,6 +465,7 @@ class BombPlus(Entity):
     def collect(self, p):
         p.bombs += 1
 
+
 class NullPower(Entity):
     enemy = False
     img = img2("Null")
@@ -441,21 +489,48 @@ class SokoBlock(Entity):
                 world.t[self.x][self.y] = 5
                 world.e.remove(self)
 
+
 class SokoBlokSlippy(SokoBlock):
-    img=img2("SokoBlokIce")
+    img = img2("SokoBlokIce")
+
     def update(self, world, events):
         if not self.moving:
             if world.get_t(self.x, self.y) == 4:
                 world.t[self.x][self.y] = 5
                 world.e.remove(self)
-            if self.dx!=0 or self.dy!=0:
-                if not self.move(self.dx,self.dy,self.speed,world):
-                    self.dx=0
-                    self.dy=0
+            if self.dx != 0 or self.dy != 0:
+                if not self.move(self.dx, self.dy, self.speed, world):
+                    self.dx = 0
+                    self.dy = 0
+
 
 class SokoBlockGoo(SokoBlock):
     img = img2("SokoBlokGoo")
     sticky = True
+
+
+class SokoBlokGrav(SokoBlock):
+    imgs = imgstrip2("GraviBlok")
+    aimgs = imgstrip2("GraviBlokAct")
+
+    def __init__(self, x, y, d):
+        self.place(x, y)
+        self.d = d
+        self.gd = [(1, 0), (0, 1), (-1, 0), (0, -1)][d]
+        self.gdx = self.gd[0]
+        self.gdy = self.gd[1]
+
+    def update(self, world, events):
+        if not self.moving:
+            if world.get_t(self.x, self.y) == 4:
+                world.t[self.x][self.y] = 5
+                world.e.remove(self)
+            self.move(self.gdx, self.gdy, 2, world)
+
+    def get_img(self):
+        if self.moving and self.dx == self.gdx and self.dy == self.gdy:
+            return self.aimgs[self.d]
+        return self.imgs[self.d]
 
 
 class Slime(Entity):
@@ -505,12 +580,91 @@ class CannonBall(Entity):
             if self.js:
                 self.js = False
 
+
 class Fireball(Entity):
     img = img2("Fireball")
-    orect = pygame.Rect(10,10,12,12)
-    enemy = True
-    def __init__(self,x,y,ang,spd):
-        self.speed=spd
-        self.ang=ang
-        self.ax=x*32
-        self.ay=y*32
+    orect = pygame.Rect(10, 10, 12, 12)
+    solid = False
+
+    def __init__(self, x, y, ang, spd):
+        self.place(x, y)
+        self.ang = ang
+        self.ax = x * 32
+        self.ay = y * 32
+        self.dx = spd * math.cos(ang)
+        self.dy = spd * math.sin(ang)
+        self.spd=spd
+
+    def update(self, world, events):
+        self.ax += self.dx
+        self.ay += self.dy
+        self.aplace(self.ax, self.ay)
+        if not world.inworld(self.x, self.y) or world.o[self.x][self.y]:
+            world.e.remove(self)
+class HomingFireball(Fireball):
+    img = img2("HFireball")
+    def update(self, world, events):
+        self.ax += self.dx
+        self.ay += self.dy
+        self.aplace(self.ax, self.ay)
+        if not world.inworld(self.x, self.y) or world.o[self.x][self.y]:
+            world.e.remove(self)
+        np=world.get_p(self.x,self.y)
+        tang=math.atan2(np.y*32 + np.yoff - self.y*32 - self.yoff, np.x*32 + np.xoff - self.x*32 - self.xoff)
+        tdiff=math.fmod(tang-self.ang+pi,tau)-pi
+        if right>tdiff>0:
+            self.ang+=0.02
+        elif 0>tdiff>-right:
+            self.ang-=0.02
+        self.dx = self.spd * math.cos(self.ang)
+        self.dy = self.spd * math.sin(self.ang)
+
+class OrbitFireball(Fireball):
+    hp = -1
+    def __init__(self, r, spd, ent):
+        self.ent=ent
+        self.ang = math.radians(randint(0,359))
+        self.spd = math.radians(spd)
+        self.r=r
+        self.recalc()
+
+    def update(self, world, events):
+        if self.ent not in world.e:
+            world.e.remove(self)
+        else:
+            self.recalc()
+    def recalc(self):
+        offx=self.ent.x*32+self.ent.xoff
+        offy=self.ent.y*32+self.ent.yoff
+        self.ang+=self.spd
+        self.ang=self.ang%(2*pi)
+        self.ax=self.r*math.cos(self.ang)+offx
+        self.ay=self.r*math.sin(self.ang)+offy
+        self.aplace(self.ax,self.ay)
+
+
+class FireballLauncher(Entity):
+    img = img2("FireballL1")
+    aimg = img2("FireballL2")
+    enemy = False
+    fireballclass=Fireball
+    speed = 3
+    def __init__(self,x,y):
+        self.place(x,y)
+        self.tonext = randint(120, 240)
+
+    def update(self, world, events):
+        if self.tonext:
+            self.tonext -= 1
+        else:
+            self.tonext = randint(120, 240)
+            np = world.get_p(self.x, self.y)
+            ang = math.atan2(np.y*32 + np.yoff - self.y*32 - self.yoff, np.x*32 + np.xoff - self.x*32 - self.xoff)
+            world.e.append(self.fireballclass(self.x, self.y, ang, self.speed))
+
+    def get_img(self):
+        return self.img if self.tonext > 30 else self.aimg
+
+class HFireballLauncher(FireballLauncher):
+    fireballclass = HomingFireball
+    aimg = img2("FireballL3")

@@ -8,7 +8,9 @@ exp = Img.sndget("explode")
 
 
 class World(object):
-    pconv=[BattlePlayers.Player,BattlePlayers.FatPlayer,BattlePlayers.SmallPlayer,BattlePlayers.ThinPlayer]
+    pconv=[BattlePlayers.Player,BattlePlayers.FatPlayer,BattlePlayers.SmallPlayer,BattlePlayers.ThinPlayer,BattlePlayers.CrazyPlayer]
+    rtime=0
+    rumbling=0
     def __init__(self, level, players,controllers):
         self.done = False
         self.level = level
@@ -76,21 +78,36 @@ class World(object):
             for y, t in enumerate(r):
                 if t:
                     Tiles.tiles[t-1].update(self,x,y)
+        if self.rtime>0:
+            self.rtime-=1
+            if self.rtime==0:
+                self.rumbling-=1
+                if self.rumbling>0:
+                    self.rtime=10
     def render(self, s):
-        for fx in self.bfx:
-            s.blit(fx.img, (fx.x, fx.y))
-        for x, r in enumerate(self.t):
-            for y, t in enumerate(r):
-                if t:
-                    s.blit(Tiles.tiles[t - 1].img, (x * 32, y * 32))
-        for e in self.e:
-            s.blit(e.get_img(), (e.x * 32 + e.xoff, e.y * 32 + e.yoff))
-        for x, r in enumerate(self.o):
-            for y, o in enumerate(r):
-                if o:
-                    s.blit(o.get_img(), (x * 32, y * 32 - 8 * o.is3d))
-        for fx in self.fx:
-            s.blit(fx.img, (fx.x, fx.y))
+        try:
+            rx=randint(-self.rumbling,self.rumbling)
+            ry=randint(-self.rumbling,self.rumbling)
+        except ValueError:
+            rx=0
+            ry=0
+        if self.rumbling>=10 and not randint(0,5):
+            s.fill((255,255,255))
+        else:
+            for fx in self.bfx:
+                s.blit(fx.img, (fx.x+rx, fx.y+ry))
+            for x, r in enumerate(self.t):
+                for y, t in enumerate(r):
+                    if t:
+                        s.blit(Tiles.tiles[t - 1].img, (x * 32+rx, y * 32+ry))
+            for e in self.e:
+                s.blit(e.get_img(), (e.x * 32 + e.xoff+rx, e.y * 32 + e.yoff+ry))
+            for x, r in enumerate(self.o):
+                for y, o in enumerate(r):
+                    if o:
+                        s.blit(o.get_img(), (x * 32+rx, y * 32 - 8 * o.is3d+ry))
+            for fx in self.fx:
+                s.blit(fx.img, (fx.x+rx, fx.y+ry))
 
     def inworld(self, x, y):
         return 0 <= x < 20 and 0 <= y < 20
@@ -122,6 +139,12 @@ class World(object):
         for e in self.e:
             if (e.x, e.y) == (x, y):
                 return e
+    def get_ents(self,x,y):
+        ents=[]
+        for e in self.e:
+            if (e.x, e.y) == (x, y):
+                ents.append(e)
+        return ents
 
     def eoconvert(self, eo):
         if eo == 1:
@@ -148,6 +171,8 @@ class World(object):
             return BattlePlayers.ThinPlayer, "spawn"
 
     def create_exp(self, fx, fy, r, p=False):
+        self.rtime=10
+        self.rumbling+=r*(p+1)
         exp.play()
         self.explode(fx, fy,p)
         for dx, dy in [[0, 1], [1, 0], [0, -1], [-1, 0]]:
