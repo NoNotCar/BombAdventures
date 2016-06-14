@@ -63,7 +63,10 @@ class World(object):
             if level[1]==8:
                 try:
                     self.boss=Bosses.bosses[level[0]-1](9,9)
-                    self.e.append(self.boss)
+                    if level[0]==6:
+                        self.o[9][9]=self.boss
+                    else:
+                        self.e.append(self.boss)
                 except IndexError:
                     pass
             savfile.close()
@@ -91,8 +94,7 @@ class World(object):
                     e.invtime=e.invoverride
                 else:
                     self.e.remove(e)
-                    if e is self.boss:
-                        self.done=60
+                    e.hp-=1
         for p in self.ps:
             if p.rect.collidelist([e.rect for e in self.e if e.enemy]) != -1:
                 self.playerdead = True
@@ -118,34 +120,33 @@ class World(object):
                 self.rumbling-=1
                 if self.rumbling>0:
                     self.rtime=10
+        if self.boss and self.boss.hp<0 and not self.done:
+            self.done=60
     def render(self, s):
         rx=randint(-self.rumbling,self.rumbling)
         ry=randint(-self.rumbling,self.rumbling)
-        if self.rumbling==10 and not randint(0,5):
-            s.fill((255,255,255))
+        if not self.edit:
+            for fx in self.bfx:
+                s.blit(fx.img, (fx.x+rx, fx.y+ry))
+        for x, r in enumerate(self.t):
+            for y, t in enumerate(r):
+                if t:
+                    s.blit(Tiles.tiles[t - 1].img, (x * 32+rx, y * 32+ry))
+        for e in self.e:
+            if not e.hidden:
+                s.blit(e.get_img(), (e.x * 32 + e.xoff+ rx, e.y * 32 + e.yoff+ry))
+        if self.edit:
+            for x, r in enumerate(self.o):
+                for y, o in enumerate(r):
+                    if o:
+                        s.blit(Tiles.eobjs[o - 1][0], (x * 32+rx, y * 32 - Tiles.eobjs[o - 1][1] * 8+ry))
         else:
-            if not self.edit:
-                for fx in self.bfx:
-                    s.blit(fx.img, (fx.x+rx, fx.y+ry))
-            for x, r in enumerate(self.t):
-                for y, t in enumerate(r):
-                    if t:
-                        s.blit(Tiles.tiles[t - 1].img, (x * 32+rx, y * 32+ry))
-            for e in self.e:
-                if not e.hidden:
-                    s.blit(e.get_img(), (e.x * 32 + e.xoff+ rx, e.y * 32 + e.yoff+ry))
-            if self.edit:
-                for x, r in enumerate(self.o):
-                    for y, o in enumerate(r):
-                        if o:
-                            s.blit(Tiles.eobjs[o - 1][0], (x * 32+rx, y * 32 - Tiles.eobjs[o - 1][1] * 8+ry))
-            else:
-                for x, r in enumerate(self.o):
-                    for y, o in enumerate(r):
-                        if o:
-                            s.blit(o.get_img(), (x * 32+rx, y * 32 - 8 * o.is3d+ry))
-                for fx in self.fx:
-                    s.blit(fx.img, (fx.x+rx, fx.y+ry))
+            for x, r in enumerate(self.o):
+                for y, o in enumerate(r):
+                    if o:
+                        s.blit(o.get_img(), (x * 32+rx, y * 32 - 8 * o.is3d+ry))
+            for fx in self.fx:
+                s.blit(fx.img, (fx.x+rx, fx.y+ry))
 
     def save(self):
         savfile = open("lvls//save.sav", "w")
@@ -221,8 +222,8 @@ class World(object):
     def create_exp(self, fx, fy, r, p=False):
         self.rtime=10
         self.rumbling+=r*(p+1)
-        if self.rumbling>10:
-            self.rumbling=10
+        if self.rumbling>7:
+            self.rumbling=7
         exp.play()
         self.explode(fx, fy,p)
         for dx, dy in [[0, 1], [1, 0], [0, -1], [-1, 0]]:

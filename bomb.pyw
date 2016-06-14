@@ -152,7 +152,7 @@ while True:
             for x in range(ap.bombs):
                 screen.blit(bombimg,(64+n*32+x*32,640))
             if w.boss:
-                if w.boss in w.e:
+                if w.boss.hp!=-1:
                     pygame.draw.rect(screen,(255,0,0),pygame.Rect(320-(w.boss.hp+1)*25,608,(w.boss.hp+1)*50,32))
                 Img.bcentrex(bfont,"BOSS",screen,608)
             pygame.display.flip()

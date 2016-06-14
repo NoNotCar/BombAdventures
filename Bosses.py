@@ -1,6 +1,7 @@
 from Entities import *
 import FX
 import Img
+import Object
 missile=Img.sndget("Expmiss")
 def bombattack(world,ssize):
     while True:
@@ -187,41 +188,69 @@ class BigSlime(Entity):
             world.ps[0].place(*self.tplocs[2-self.hp])
     def get_img(self):
         return self.imgs[self.anitick // 8]
-class NomSnakeHead(Entity):
-    imgs = imgstrip2("NomStrip")
-    img = imgs[0]
-    anitick=0
-    hp = 10
+
+class BlockBot(Object.Object):
+    tick=0
+    hp=5
+    inv=0
+    img=img2("BossBlock")
+    imga=img2("BossBlockWhite")
     dx=-1
     dy=0
-    init=True
-    def update(self, world, events):
-        if self.init:
-            for x in range(10):
-                seg=NomSnakeSeg(self.x+x,self.y,self)
-                world.e.append(seg)
-                if x==0:
-                    self.fseg=seg
-                seg.move(self.dx,self.dy,2,world,True)
-            self.move(self.dx,self.dy,2,world,True)
-            self.init=False
-        if self.anitick == 15:
-            self.anitick = 0
-            if not self.move(self.dx,self.dy,2,world):
-                pass
-            elif self.invtime>=60:
-                self.invoverride=320+(5-self.hp)*120
-                for x in range((self.hp==0)+1):
-                    missileattack(world,5)
-                    if randint(0,1):
+    destructible=False
+    missilecooldown=0
+    stuck=False
+    def update(self,world):
+        if self.tick>=self.hp*5+10:
+            self.tick=0
+            if randint(0,4) and self.clear(self.dx+self.x,self.dy+self.y,world):
+                self.move(self.dx,self.dy,world)
+            else:
+                dirs=[[0,1],[1,0],[0,-1],[-1,0]]
+                shuffle(dirs)
+                for dx,dy in dirs:
+                    if self.clear(self.x+dx,self.y+dy,world):
+                        self.move(dx,dy,world)
                         break
-
+                else:
+                    self.stuck=True
         else:
-            self.anitick += 1
-        if self.invtime:
-            self.img = self.aimgs[(self.anitick // 4) % 4]
-        else:
-            self.img = self.imgs[self.anitick // 8]
+            self.tick+=1
+        if self.inv:
+            self.inv-=1
+        if self.stuck:
+            if self.missilecooldown==0:
+                missileattack(world,9)
+                self.missilecooldown=120 if self.hp else 60
+        if self.missilecooldown:
+            self.missilecooldown-=1
+    def get_img(self):
+        if self.stuck or not self.hp:
+            return self.img if (self.tick//2)%2 else self.imga
+        return self.img
+    def move(self,dx,dy,world):
+        self.stuck=False
+        tx=self.x+dx
+        ty=self.y+dy
+        if world.get_ent(tx,ty) in world.ps:
+            world.e.remove(world.get_ent(tx,ty))
+            world.playerdead=True
+        world.o[tx][ty]=self
+        world.o[self.x][self.y]=(Object.Block if randint(self.hp,20)>5 else Object.ExplosiveBlock)(self.x,self.y)
+        self.x=tx
+        self.y=ty
+    def clear(self,tx,ty,world):
+        if world.inworld(tx,ty) and world.get_t(tx,ty) and not world.o[tx][ty]:
+            gent=world.get_ent(tx,ty)
+            if gent is None or gent in world.ps:
+                return True
+    def explode(self,world):
+        if not self.inv:
+            self.hp-=1
+            if self.hp==-1:
+                world.o[self.x][self.y]=None
+            else:
+                self.inv=30
 class Multi(Entity):
     hidden = True
     def __init__(self, x, y, p):
@@ -237,7 +266,4 @@ class Multi(Entity):
             self.p.hp=self.hp
             self.p.invtime=self.p.invoverride
             self.invtime=self.p.invoverride
-class NomSnakeSeg(Multi):
-    hidden = False
-    img=img2("NomSeg")
-bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX]
+bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX,BlockBot]
