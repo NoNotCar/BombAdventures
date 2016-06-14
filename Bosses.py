@@ -251,8 +251,70 @@ class BlockBot(Object.Object):
                 world.o[self.x][self.y]=None
             else:
                 self.inv=30
+class DarkMonster(DarkCoreX):
+    hp = 4
+    imgs=imgstrip2("DarkMonster")
+    aimgs = imgstrip2("DarkMonsterAng")
+    initing=True
+    darkresist = True
+    invoverride = 20
+    def update(self, world, events):
+        if self.initing:
+            self.initing=False
+            for x in range(3):
+                for y in range(3):
+                    if (x,y)!=(0,0):
+                        world.e.append(Multi(self.x+x,self.y+y,self))
+        if self.anitick == 31:
+            self.anitick = 0
+        else:
+            self.anitick += 1
+        if self.invtime==1:
+            self.invtime=2
+            if not self.attacking:
+                self.attacking=True
+                self.attacks=["f","r","g","f"] if self.hp>=2 else ["fh","b","g","r","g","b","f"]
+                self.aleft={"r":2,"g":1,"b":randint(10,20),"f":randint(180,360),"fh":randint(20,30)}[self.attacks[0]]
+            a=self.attacks[0]
+            if self.aleft==0 and not any([m in world.e for m in self.minions]):
+                del self.attacks[0]
+                if not self.attacks:
+                    self.invtime=0
+                    self.attacking=False
+                else:
+                    a=self.attacks[0]
+                    self.aleft={"r":2,"g":1,"b":randint(10,20),"f":randint(180,360),"fh":randint(20,30)}[a]
+            elif self.atime==0 and not any([m in world.e for m in self.minions]):
+                self.aleft-=1
+                if a=="r":
+                    missileattack(world,8)
+                    self.atime=120
+                elif a=="f":
+                    world.e.append(Fireball(10,10,math.radians(self.aleft*4),4))
+                    self.atime=1
+                elif a=="fh":
+                    world.e.append(HomingFireball(10,10,self.aleft,3))
+                    self.atime=30
+                elif a=="g":
+                    for dx, dy in [[0, -1],[1,-1],[2,-1], [3, 0],[3,1],[3,2], [0, 3],[1,3],[2,3], [-1, 0],[-1,1],[-1,2]]:
+                        tx,ty=self.x+dx,self.y+dy
+                        if world.is_clear(tx,ty):
+                            ghost=FGhost(self.x+1,self.y+1)
+                            world.e.append(ghost)
+                            ghost.move(dx-1,dy-1,2,world,True)
+                            self.minions.append(ghost)
+                elif a=="b":
+                    bombattack(world,8)
+                    self.atime=20
+            elif self.atime:
+                self.atime-=1
+        if self.invtime:
+            self.img = self.aimgs[self.anitick // 2 % 8]
+        else:
+            self.img = self.imgs[self.anitick // 4]
 class Multi(Entity):
     hidden = True
+    darkresist = True
     def __init__(self, x, y, p):
         self.x = x
         self.y = y
@@ -266,4 +328,6 @@ class Multi(Entity):
             self.p.hp=self.hp
             self.p.invtime=self.p.invoverride
             self.invtime=self.p.invoverride
-bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX,BlockBot]
+        if self.invtime<self.p.invtime:
+            self.invtime=self.p.invtime
+bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX,BlockBot,DarkMonster]

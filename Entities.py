@@ -585,8 +585,12 @@ class Fireball(Entity):
     img = img2("Fireball")
     orect = pygame.Rect(10, 10, 12, 12)
     solid = False
-
+    darkresist = True
     def __init__(self, x, y, ang, spd):
+        while ang < pi:
+            ang += 2 * pi
+        while ang > pi:
+            ang -= 2 * pi
         self.place(x, y)
         self.ang = ang
         self.ax = x * 32
