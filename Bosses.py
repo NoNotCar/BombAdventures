@@ -132,7 +132,7 @@ class DarkCoreX(DarkCore):
             self.invtime=2
             if not self.attacking:
                 self.attacking=True
-                self.attacks=["r","g"] if self.hp>=2 else ["r","g","r","b","g"]
+                self.attacks=["r","g","r"] if self.hp>=2 else ["b","g","r","g","b"]
                 self.aleft={"r":2,"g":1,"b":randint(10,20)}[self.attacks[0]]
             a=self.attacks[0]
             if self.aleft==0 and not any([m in world.e for m in self.minions]):
