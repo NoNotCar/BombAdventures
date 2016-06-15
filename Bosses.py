@@ -3,6 +3,7 @@ import FX
 import Img
 import Object
 missile=Img.sndget("Expmiss")
+laugh=Img.sndget("bosslaugh")
 def bombattack(world,ssize):
     while True:
         tx=randint(9-ssize,9+ssize)
@@ -291,7 +292,6 @@ class DarkMonster(DarkCoreX):
                     self.atime=120
                 elif a=="f":
                     world.e.append(Fireball(10,10,math.radians(self.aleft*4),4))
-                    self.atime=1
                 elif a=="fh":
                     world.e.append(HomingFireball(10,10,self.aleft,3))
                     self.atime=30
@@ -312,6 +312,64 @@ class DarkMonster(DarkCoreX):
             self.img = self.aimgs[self.anitick // 2 % 8]
         else:
             self.img = self.imgs[self.anitick // 4]
+class DarkPlayer(Player):
+    hidden = True
+    solid=False
+    enemy = False
+    bombs = 1
+    rng = 2
+    pen = True
+    dy = 1
+    hp=5
+    iconv = {(0, -1): img2("Men/ManBu"), (0, 1): img2("Men/ManB"), (1, 0): img2("Men/ManBr"),
+             (-1, 0): img2("Men/ManBl")}
+    ms = 2
+    rd = False
+    detonate = False
+    activate=False
+
+    def update(self, world, events):
+        if self.activate:
+            self.activate=False
+        if self.hidden:
+            if (world.ps[0].x,world.ps[0].y)==(self.x,self.y) and not world.ps[0].moving:
+                world.done=False
+                world.e.remove(world.ps[0])
+                del world.ps[0]
+                np=Player(9,2)
+                np.hidden=True
+                world.ps.append(np)
+                world.e.append(np)
+                self.hidden=False
+                self.solid=True
+                world.t[self.x][self.y]=1
+                self.enemy=True
+                self.activate=True
+                laugh.play()
+        else:
+            if not randint(0,1000):
+                laugh.play()
+            if not self.moving:
+                if world.indanger(self.x,self.y):
+                    dirs=[[0,1],[1,0],[0,-1],[-1,0]]
+                    shuffle(dirs)
+                    for dx,dy in dirs:
+                        if self.move(dx,dy,2,world):
+                            break
+                elif self.bombs:
+                    if randint(0,2):
+                        dirs=[[0,1],[1,0],[0,-1],[-1,0]]
+                        shuffle(dirs)
+                        for dx,dy in dirs:
+                            if not world.indanger(self.x+dx,self.y+dy) and self.move(dx,dy,2,world):
+                                break
+                    else:
+                        world.e.append(Bomb(self.x,self.y,6-self.hp,self))
+                        self.bombs-=1
+
+
+    def get_img(self):
+        return self.iconv[(self.dx, self.dy)]
 class Multi(Entity):
     hidden = True
     darkresist = True
@@ -330,4 +388,4 @@ class Multi(Entity):
             self.invtime=self.p.invoverride
         if self.invtime<self.p.invtime:
             self.invtime=self.p.invtime
-bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX,BlockBot,DarkMonster]
+bosses=[BGhost,FBGhost,DarkCore,BigSlime,DarkCoreX,BlockBot,DarkMonster,DarkPlayer]

@@ -194,6 +194,8 @@ class Player(Entity):
     detonate = False
 
     def update(self, world, events):
+        if self.hidden:
+            self.hidden=False
         if self.detonate:
             self.detonate = False
         if world.akey == self.akey:

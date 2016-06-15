@@ -4,7 +4,7 @@ pygame.init()
 pygame.font.init()
 screen = pygame.display.set_mode((640, 672))
 import World, Img
-from Worlds import worlds, castle
+from Worlds import worlds, castle, final1, final2
 import Tiles,Object,Save
 
 pdf = pygame.font.get_default_font()
@@ -19,7 +19,7 @@ progress={x:"" for x in range(1,9)}
 expimg=Img.img2("Exp")
 pexpimg=Img.img2("ExpPen")
 bombimg=Img.img2("Bomb")
-Img.musplay("OF.ogg")
+Img.musplay("ChOrDs.ogg")
 cimgs={"N":Img.img("NComplete"),"S":Img.img("SComplete"),"C":Img.img("Complete")}
 try:
     savefile=open("SAVE.sav","r")
@@ -119,14 +119,13 @@ while True:
         pygame.display.flip()
         pygame.time.wait(2000)
         break
-    world=worlds[level[0]-1] if level[1]!=8 else castle
+    world=worlds[level[0]-1] if level[1]!=8 else castle if level[0]!=8 else final1
     Img.musplay(world.music+".ogg")
     screen.fill(world.loadcolour)
     Img.bcentre(tfont,"WORLD %s-%s"%tuple(level),screen)
     Img.bcentre(sfont,w.fltext,screen,50)
     pygame.display.flip()
     pygame.time.wait(2000)
-    tofpsprint=60
     Tiles.Grass.img=world.textures[0]
     Object.Block.img=world.textures[1]
     Object.Indest.img=world.textures[2]
@@ -151,10 +150,24 @@ while True:
                 screen.blit(pexpimg if ap.pen else expimg, (32+n*32,640))
             for x in range(ap.bombs):
                 screen.blit(bombimg,(64+n*32+x*32,640))
-            if w.boss:
+            if w.boss and world!=final1:
                 if w.boss.hp!=-1:
                     pygame.draw.rect(screen,(255,0,0),pygame.Rect(320-(w.boss.hp+1)*25,608,(w.boss.hp+1)*50,32))
                 Img.bcentrex(bfont,"BOSS",screen,608)
+            if level[0]==8 and level[1]==8 and w.boss.activate:
+                pygame.display.flip()
+                pygame.mixer.music.stop()
+                pygame.time.wait(2000)
+                world=final2
+                Tiles.Grass.img=world.textures[0]
+                Object.Block.img=world.textures[1]
+                Object.Indest.img=world.textures[2]
+                back=world.back
+                screen.fill((255,255,255))
+                Img.bcentre(tfont,"FOOL",screen)
+                pygame.display.flip()
+                Img.musplay(world.music+".ogg")
+                pygame.time.wait(2000)
             pygame.display.flip()
             clock.tick(60)
             if w.done>1:

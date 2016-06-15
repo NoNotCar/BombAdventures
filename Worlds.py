@@ -26,3 +26,6 @@ worlds = [World([Img.img2("Grass"), Img.img2("Block"), Img.img2("Grass2")], "for
                 (84, 2, 0), (133, 5, 1))]
 castle = World([Img.img2("CastleFloor"), Img.img2("CastleBlock"), Img.img2("CastleIn")], "boss", (125, 125, 125),
                (200, 200, 200))
+final1=World([Img.img2("Grass"), Img.img2("Flowers"), Img.img2("Tree")], "forbidden", (125, 255, 255), (125, 225, 0))
+final2=World([Img.img2("EndFloor"), Img.img2("EndBrick"), Img.img2("EndBlock")], "boss", (0, 0, 0),
+                (50, 50, 50))

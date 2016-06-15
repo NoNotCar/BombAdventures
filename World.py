@@ -233,6 +233,15 @@ class World(object):
                     break
                 x += dx
                 y += dy
+    def get_exppos(self,fx,fy,r):
+        poss=[(fx,fy)]
+        for dx, dy in [[0, 1], [1, 0], [0, -1], [-1, 0]]:
+            x, y = fx + dx, fy + dy
+            for n in range(r):
+                poss.append((x,y))
+                x += dx
+                y += dy
+        return poss
 
     def explode(self, x, y, p):
         if self.inworld(x, y):
@@ -266,3 +275,8 @@ class World(object):
         return self.ps[0]
     def get_activeplayer(self):
         return [p for p in self.ps if p.akey==self.akey][0]
+    def indanger(self,x,y):
+        for e in self.e:
+            if e.name=="Bomb" and (x,y) in self.get_exppos(e.x,e.y,e.r):
+                return True
+
