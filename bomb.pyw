@@ -21,11 +21,12 @@ pexpimg=Img.img2("ExpPen")
 bombimg=Img.img2("Bomb")
 Img.musplay("ChOrDs.ogg")
 impossible=False
+imp="UNPOSSIBLE"
 cimgs={"N":Img.img("NComplete"),"S":Img.img("SComplete"),"C":Img.img("Complete")}
 try:
     savefile=open("SAVE.sav","r")
     save=savefile.readline()
-    snum,sprog=save.split("/")
+    snum,sprog,imp=save.split("/")
     if Save.load(snum):
         wnum=Save.load(snum)
         n=0
@@ -37,6 +38,16 @@ try:
     savefile.close()
 except IOError:
     pass
+stars=0
+if wnum==9:
+    stars+=1
+if all([v=="C" for k,v in progress.iteritems()]):
+    stars+=1
+if imp=="IMPOSSIBLE":
+    stars+=1
+    imp=True
+else:
+    imp=False
 success=Img.sndget("Level")
 while not breaking:
     for event in pygame.event.get():
@@ -52,6 +63,8 @@ while not breaking:
     Img.bcentre(sfont,"Click to start",screen,50)
     if wnum==9:
         Img.bcentre(sfont, "Press i for impossible mode", screen, 70)
+    for n in range(stars):
+        screen.blit(cimgs["C"],(224+n*64,576))
     pygame.display.flip()
     clock.tick(60)
 breaking=False
@@ -127,6 +140,12 @@ while True:
         Img.bcentre(sfont,"(Hooray)",screen,50)
         pygame.display.flip()
         pygame.time.wait(2000)
+        if impossible:
+            savefile=open("SAVE.sav","w")
+            savefile.write(Save.save(wnum)+"/")
+            savefile.write("".join([str(w)+s for w,s in progress.iteritems()])+"/")
+            savefile.write("IMPOSSIBLE")
+            savefile.close()
         break
     world=worlds[level[0]-1] if level[1]!=8 else castle if level[0]!=8 else final1
     Img.musplay(world.music+".ogg")
@@ -199,12 +218,15 @@ while True:
             if not impossible:
                 if level[0]>wnum:
                     savefile=open("SAVE.sav","w")
-                    savefile.write(Save.save(level[0]))
+                    savefile.write(Save.save(level[0])+"/")
+                    savefile.write("".join([str(w)+s for w,s in progress.iteritems()])+"/")
+                    savefile.write("IMPOSSIBLE" if imp else "UNPOSSIBLE")
                     savefile.close()
                 else:
                     savefile=open("SAVE.sav","w")
                     savefile.write(Save.save(wnum)+"/")
-                    savefile.write("".join([str(w)+s for w,s in progress.iteritems()]))
+                    savefile.write("".join([str(w)+s for w,s in progress.iteritems()])+"/")
+                    savefile.write("IMPOSSIBLE" if imp else "UNPOSSIBLE")
                     savefile.close()
         elif level[1]=="A":
             if progress[level[0]]=="N":
