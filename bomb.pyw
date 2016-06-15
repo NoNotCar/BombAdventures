@@ -20,6 +20,7 @@ expimg=Img.img2("Exp")
 pexpimg=Img.img2("ExpPen")
 bombimg=Img.img2("Bomb")
 Img.musplay("ChOrDs.ogg")
+impossible=False
 cimgs={"N":Img.img("NComplete"),"S":Img.img("SComplete"),"C":Img.img("Complete")}
 try:
     savefile=open("SAVE.sav","r")
@@ -43,47 +44,21 @@ while not breaking:
             sys.exit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             breaking = True
+        elif wnum==9 and event.type==pygame.KEYDOWN:
+            breaking = True
+            impossible=True
     screen.fill((255, 0, 0))
     Img.bcentre(tfont,"BOMB ADVENTURES",screen)
     Img.bcentre(sfont,"Click to start",screen,50)
+    if wnum==9:
+        Img.bcentre(sfont, "Press i for impossible mode", screen, 70)
     pygame.display.flip()
     clock.tick(60)
 breaking=False
 wselnum=0
 mx=0
 lselecting=False
-while not breaking:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            my=pygame.mouse.get_pos()[1]
-            sel=(my-70)//64
-            if 0<=sel<wnum and sel<len(worlds):
-                wselnum=sel+1
-                breaking=True
-                if progress[wselnum]:
-                    lselecting=True
-    screen.fill((0, 0, 0))
-    Img.bcentrex(tfont,"SELECT WORLD",screen,2,(255,255,255))
-    for n,w in enumerate(worlds[:wnum]):
-        pygame.draw.rect(screen,w.loadcolour,pygame.Rect(0,n*64+66,640,64))
-        Img.bcentrex(tfont,"WORLD %s" % str(n+1),screen,n*64+70)
-        if progress[n+1]:
-            screen.blit(cimgs[progress[n+1]],(576,n*64+66))
-    screen.blit(man,(mx-32,646))
-    mx=(mx+2)%672
-    pygame.display.flip()
-    clock.tick(60)
-if lselecting:
-    lsel=None
-    breaking=False
-    if progress[wselnum]=="S":
-        lset=[1,8,"A"]
-    else:
-        lset=range(1,9)
-        if progress[wselnum]=="C":
-            lset.append("A")
+if not impossible:
     while not breaking:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -91,21 +66,55 @@ if lselecting:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 my=pygame.mouse.get_pos()[1]
                 sel=(my-70)//64
-                if 0<=sel<wnum and sel<len(lset):
-                    lsel=lset[sel]
+                if 0<=sel<wnum and sel<len(worlds):
+                    wselnum=sel+1
                     breaking=True
+                    if progress[wselnum]:
+                        lselecting=True
         screen.fill((0, 0, 0))
-        Img.bcentrex(tfont,"SELECT LEVEL",screen,2,(255,255,255))
-        for n,l in enumerate(lset):
-            pygame.draw.rect(screen,worlds[wselnum-1].loadcolour,pygame.Rect(0,n*64+66,640,64))
-            Img.bcentrex(tfont,"WORLD %s-%s" % (str(wselnum),str(l)),screen,n*64+70)
+        Img.bcentrex(tfont,"SELECT WORLD",screen,2,(255,255,255))
+        for n,w in enumerate(worlds[:wnum]):
+            pygame.draw.rect(screen,w.loadcolour,pygame.Rect(0,n*64+66,640,64))
+            Img.bcentrex(tfont,"WORLD %s" % str(n+1),screen,n*64+70)
+            if progress[n+1]:
+                screen.blit(cimgs[progress[n+1]],(576,n*64+66))
         screen.blit(man,(mx-32,646))
         mx=(mx+2)%672
         pygame.display.flip()
         clock.tick(60)
-    level=[wselnum,lsel]
+    if lselecting:
+        lsel=None
+        breaking=False
+        if progress[wselnum]=="S":
+            lset=[1,8,"A"]
+        else:
+            lset=range(1,9)
+            if progress[wselnum]=="C":
+                lset.append("A")
+        while not breaking:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    my=pygame.mouse.get_pos()[1]
+                    sel=(my-70)//64
+                    if 0<=sel<wnum and sel<len(lset):
+                        lsel=lset[sel]
+                        breaking=True
+            screen.fill((0, 0, 0))
+            Img.bcentrex(tfont,"SELECT LEVEL",screen,2,(255,255,255))
+            for n,l in enumerate(lset):
+                pygame.draw.rect(screen,worlds[wselnum-1].loadcolour,pygame.Rect(0,n*64+66,640,64))
+                Img.bcentrex(tfont,"WORLD %s-%s" % (str(wselnum),str(l)),screen,n*64+70)
+            screen.blit(man,(mx-32,646))
+            mx=(mx+2)%672
+            pygame.display.flip()
+            clock.tick(60)
+        level=[wselnum,lsel]
+    else:
+        level=[wselnum,1]
 else:
-    level=[wselnum,1]
+    level=[1,1]
 success.play()
 pygame.mixer.music.stop()
 pygame.time.wait(1000)
@@ -122,6 +131,8 @@ while True:
     world=worlds[level[0]-1] if level[1]!=8 else castle if level[0]!=8 else final1
     Img.musplay(world.music+".ogg")
     screen.fill(world.loadcolour)
+    if impossible:
+        Img.bcentrex(tfont,"IMPOSSIBLE MODE",screen,0,(255,0,0))
     Img.bcentre(tfont,"WORLD %s-%s"%tuple(level),screen)
     Img.bcentre(sfont,w.fltext,screen,50)
     pygame.display.flip()
@@ -185,15 +196,16 @@ while True:
         success.play()
         if level[1] == 8:
             level=[level[0]+1,1]
-            if level[0]>wnum:
-                savefile=open("SAVE.sav","w")
-                savefile.write(Save.save(level[0]))
-                savefile.close()
-            else:
-                savefile=open("SAVE.sav","w")
-                savefile.write(Save.save(wnum)+"/")
-                savefile.write("".join([str(w)+s for w,s in progress.iteritems()]))
-                savefile.close()
+            if not impossible:
+                if level[0]>wnum:
+                    savefile=open("SAVE.sav","w")
+                    savefile.write(Save.save(level[0]))
+                    savefile.close()
+                else:
+                    savefile=open("SAVE.sav","w")
+                    savefile.write(Save.save(wnum)+"/")
+                    savefile.write("".join([str(w)+s for w,s in progress.iteritems()]))
+                    savefile.close()
         elif level[1]=="A":
             if progress[level[0]]=="N":
                 progress[level[0]]="C"
@@ -209,4 +221,11 @@ while True:
                 progress[level[0]]="C"
             elif progress[level[0]]=="":
                 progress[level[0]]="N"
+    elif impossible:
+        pygame.time.wait(5000)
+        screen.fill((0,0,0))
+        Img.bcentre(tfont,"FOOL",screen,col=(255,255,255))
+        pygame.display.flip()
+        pygame.time.wait(5000)
+        sys.exit()
     pygame.time.wait(1000)
