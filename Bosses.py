@@ -4,6 +4,7 @@ import Img
 import Object
 missile=Img.sndget("Expmiss")
 laugh=Img.sndget("bosslaugh")
+tp=Img.sndget("teleport")
 def bombattack(world,ssize):
     while True:
         tx=randint(9-ssize,9+ssize)
@@ -187,6 +188,7 @@ class BigSlime(Entity):
         if self.invtime==19:
             world.fx.append(FX.TPFX(world.ps[0].x*32,world.ps[0].y*32))
             world.ps[0].place(*self.tplocs[2-self.hp])
+            tp.play()
     def get_img(self):
         return self.imgs[self.anitick // 8]
 
