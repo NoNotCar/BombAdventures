@@ -290,7 +290,7 @@ class DarkMonster(DarkCoreX):
             elif self.atime==0 and not any([m in world.e for m in self.minions]):
                 self.aleft-=1
                 if a=="r":
-                    missileattack(world,8)
+                    missileattack(world,9)
                     self.atime=120
                 elif a=="f":
                     world.e.append(Fireball(10,10,math.radians(self.aleft*4),4))
@@ -306,7 +306,7 @@ class DarkMonster(DarkCoreX):
                             ghost.move(dx-1,dy-1,2,world,True)
                             self.minions.append(ghost)
                 elif a=="b":
-                    bombattack(world,8)
+                    bombattack(world,9)
                     self.atime=20
             elif self.atime:
                 self.atime-=1
