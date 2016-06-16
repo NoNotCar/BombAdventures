@@ -18,7 +18,7 @@ tickimg=Img.img2("Tick")
 crossimg=Img.img2("Null")
 pimgs=[Img.img2("men/"+x) for x in ["Man2","FMan","SMan","Tman"]]#+[Img.imgstrip("men/CMan")[0]]
 breaking = False
-Img.musplay("OF.ogg")
+Img.musplay("ChOrDs.ogg")
 while not breaking:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -76,7 +76,7 @@ while True:
     lvls=os.listdir(Img.np("lvls/battle/"))
     lvls=[lvl for lvl in lvls if lvl[0]==str(len(rsps))]
     w=BattleWorld.World(choice(lvls), rsps,rsc)
-    Img.musplay("Cumulo.ogg")
+    Img.musplay("boss.ogg")
     while len(w.ps)>=2:
         events = pygame.event.get()
         for event in events:
