@@ -12,6 +12,7 @@ tfont=pygame.font.Font(pdf,60)
 sfont=pygame.font.Font(pdf,20)
 bfont=pygame.font.Font(pdf,32)
 clock = pygame.time.Clock()
+psel=Img.img("PSel")
 breaking = False
 man=Img.img2("Men/Man2r")
 wnum=1
@@ -131,6 +132,7 @@ else:
 success.play()
 pygame.mixer.music.stop()
 pygame.time.wait(1000)
+died=False
 while True:
     try:
         w = World.World(False,level)
@@ -156,6 +158,11 @@ while True:
     Img.bcentre(sfont,w.fltext,screen,50)
     pygame.display.flip()
     pygame.time.wait(2000)
+    if level==[6,6] and not died:
+        screen.fill(world.loadcolour)
+        Img.bcentre(bfont,"SHIFT TO DETONATE",screen)
+        pygame.display.flip()
+        pygame.time.wait(2000)
     Tiles.Grass.img=world.textures[0]
     Object.Block.img=world.textures[1]
     Object.Indest.img=world.textures[2]
@@ -180,6 +187,8 @@ while True:
                 screen.blit(pexpimg if ap.pen else expimg, (32+n*32,640))
             for x in range(ap.bombs):
                 screen.blit(bombimg,(64+n*32+x*32,640))
+            if level[0]>=6:
+                screen.blit(psel,(608,640))
             if w.boss and world!=final1:
                 if w.boss.hp!=-1:
                     pygame.draw.rect(screen,(255,0,0),pygame.Rect(320-(w.boss.hp+1)*25,608,(w.boss.hp+1)*50,32))
@@ -212,6 +221,7 @@ while True:
             pygame.event.get()
     pygame.mixer.music.stop()
     if w.done:
+        died=False
         success.play()
         if level[1] == 8:
             level=[level[0]+1,1]
@@ -250,4 +260,6 @@ while True:
         pygame.display.flip()
         pygame.time.wait(5000)
         sys.exit()
+    else:
+        died=True
     pygame.time.wait(1000)
